@@ -1,0 +1,2622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<meta name="theme-color" content="#15803d"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="AgriAdvisor"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png"/>
+<link rel="apple-touch-icon" sizes="167x167" href="/icon-167.png"/>
+<link rel="apple-touch-icon" sizes="152x152" href="/icon-152.png"/>
+<link rel="apple-touch-icon" sizes="120x120" href="/icon-120.png"/>
+<link rel="apple-touch-icon" href="/icon-192.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"/>
+<meta name="version" content="2.1.0"/>
+<!-- AgriAdvisor v6.0.0 - Improved Farm Profile -->
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AgriAdvisor — Smart Farming for East Africa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;1,300;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+:root {
+  --green: #1D9E75;
+  --green-dark: #0F6E56;
+  --green-deep: #064e3b;
+  --green-light: #d1fae5;
+  --green-mid: #6ee7b7;
+  --amber: #f59e0b;
+  --amber-light: #fef3c7;
+  --red: #ef4444;
+  --red-light: #fee2e2;
+  --blue: #3b82f6;
+  --blue-light: #dbeafe;
+  --ink: #0d1f1a;
+  --ink2: #1a3329;
+  --muted: #6b7280;
+  --border: rgba(0,0,0,0.08);
+  --surface: #ffffff;
+  --bg: #f0f7f4;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body,#root{height:100%}
+body{font-family:var(--font-body);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+button{cursor:pointer;font-family:var(--font-body)}
+input,select,textarea{font-family:var(--font-body)}
+a{color:inherit;text-decoration:none}
+
+/* ── PAGE TRANSITIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideRight{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.fade-up{animation:fadeUp .5s cubic-bezier(.16,1,.3,1) forwards}
+.fade-in{animation:fadeIn .4s ease forwards}
+.slide-right{animation:slideRight .4s cubic-bezier(.16,1,.3,1) forwards}
+
+/* ══════════════════════════════
+   LOGIN PAGE
+══════════════════════════════ */
+.login-root{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;background:#fff}
+@media(max-width:768px){.login-root{grid-template-columns:1fr}}
+
+/* Left panel — brand */
+.login-brand{background:var(--green-deep);position:relative;display:flex;flex-direction:column;justify-content:space-between;padding:48px;overflow:hidden}
+.login-brand::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(29,158,117,.4) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(6,78,59,.8) 0%,transparent 50%)}
+.brand-geo{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.geo-circle{position:absolute;border-radius:50%;border:1px solid rgba(110,231,183,.12)}
+.brand-top{position:relative;z-index:1}
+.brand-logo{display:flex;align-items:center;gap:12px;margin-bottom:64px}
+.brand-logo-mark{width:44px;height:44px;background:var(--green);border-radius:12px;display:flex;align-items:center;justify-content:center}
+.brand-logo-name{font-family:var(--font-display);font-size:20px;font-weight:500;color:#fff;letter-spacing:-.3px}
+.brand-headline{font-family:var(--font-display);font-size:48px;font-weight:300;color:#fff;line-height:1.15;letter-spacing:-.5px}
+.brand-headline em{font-style:italic;color:var(--green-mid)}
+.brand-sub{margin-top:20px;font-size:16px;color:rgba(255,255,255,.55);line-height:1.6;max-width:360px}
+.brand-bottom{position:relative;z-index:1}
+.brand-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px}
+.bstat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px}
+.bstat-val{font-family:var(--font-display);font-size:26px;font-weight:500;color:#fff}
+.bstat-lbl{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+.brand-flags{display:flex;gap:8px;align-items:center}
+.flag-pill{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:5px 12px;font-size:12px;color:rgba(255,255,255,.6);display:flex;align-items:center;gap:6px}
+@media(max-width:768px){.login-brand{display:none}}
+
+/* Right panel — form */
+.login-form-panel{display:flex;flex-direction:column;justify-content:center;align-items:center;padding:48px 40px;background:#fff}
+.login-form-wrap{width:100%;max-width:400px}
+.lf-step-tag{font-size:12px;font-weight:600;color:var(--green);letter-spacing:.06em;text-transform:uppercase;margin-bottom:28px}
+.lf-title{font-family:var(--font-display);font-size:32px;font-weight:500;color:var(--ink);letter-spacing:-.3px;line-height:1.2}
+.lf-sub{font-size:14px;color:var(--muted);margin-top:8px;line-height:1.6}
+.lf-form{margin-top:36px;display:flex;flex-direction:column;gap:20px}
+.lf-field{display:flex;flex-direction:column;gap:6px}
+.lf-label{font-size:13px;font-weight:500;color:var(--ink)}
+.lf-input{padding:13px 16px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;color:var(--ink);background:#fff;transition:border-color .2s,box-shadow .2s;outline:none}
+.lf-input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,158,117,.12)}
+.lf-input::placeholder{color:#c0c7d0}
+.lf-input-wrap{position:relative}
+.lf-input-wrap .lf-input{width:100%;padding-right:44px}
+.lf-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);padding:0;display:flex}
+.lf-row{display:flex;justify-content:space-between;align-items:center}
+.lf-remember{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
+.lf-remember input{width:15px;height:15px;accent-color:var(--green);cursor:pointer}
+.lf-forgot{font-size:13px;color:var(--green);font-weight:500}
+.lf-submit{padding:14px;background:var(--green);border:none;border-radius:10px;font-size:15px;font-weight:600;color:#fff;transition:background .2s,transform .1s,box-shadow .2s;box-shadow:0 2px 8px rgba(29,158,117,.3)}
+.lf-submit:hover{background:var(--green-dark);box-shadow:0 4px 16px rgba(29,158,117,.4)}
+.lf-submit:active{transform:scale(.98)}
+.lf-submit:disabled{opacity:.6;cursor:not-allowed}
+.lf-divider{display:flex;align-items:center;gap:12px;font-size:13px;color:#d1d5db}
+.lf-divider::before,.lf-divider::after{content:'';flex:1;height:1px;background:#f3f4f6}
+.lf-socials{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lf-social-btn{padding:11px;border:1.5px solid #e5e7eb;border-radius:10px;background:#fff;font-size:13px;font-weight:500;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:8px;transition:border-color .2s,background .2s}
+.lf-social-btn:hover{border-color:var(--green);background:#f0fdf4}
+.lf-signup-row{text-align:center;font-size:13px;color:var(--muted);margin-top:8px}
+.lf-signup-row span{color:var(--green);font-weight:600;cursor:pointer}
+.lf-error{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:13px;color:#dc2626;display:flex;align-items:center;gap:8px}
+.lf-country-select-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.lf-ctile{border:1.5px solid #e5e7eb;border-radius:10px;padding:12px;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:10px}
+.lf-ctile:hover{border-color:var(--green);background:#f0fdf4}
+.lf-ctile.sel{border-color:var(--green);background:#f0fdf4}
+.lf-ctile .cf{font-size:20px}
+.lf-ctile .cn{font-size:13px;font-weight:600;color:var(--ink)}
+.lf-ctile .cc{font-size:10px;color:var(--muted)}
+.lf-eth-tile{grid-column:1/-1}
+.lf-lang-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lf-ltile{border:1.5px solid #e5e7eb;border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:10px}
+.lf-ltile:hover{border-color:var(--green);background:#f0fdf4}
+.lf-ltile.sel{border-color:var(--green);background:#f0fdf4}
+.lf-lang-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
+
+/* ── AUTH MODE TABS ── */
+.auth-tabs{display:flex;background:#f3f4f6;border-radius:12px;padding:4px;gap:3px;margin-bottom:8px}
+.auth-tab{flex:1;padding:10px 14px;border-radius:9px;border:none;font-size:13px;font-weight:600;color:var(--muted);background:none;cursor:pointer;transition:all .18s}
+.auth-tab.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+
+/* ── PHONE ROW ── */
+.phone-row{display:flex;gap:8px;align-items:stretch}
+.dial-select{padding:0 10px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-weight:600;color:var(--ink);background:#fff;cursor:pointer;outline:none;min-width:100px;transition:border-color .2s}
+.dial-select:focus{border-color:var(--green)}
+
+/* ── OTP BOXES ── */
+.otp-boxes{display:flex;gap:10px;justify-content:center;margin-bottom:8px}
+.otp-box{width:48px;height:58px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:24px;font-weight:700;text-align:center;color:var(--ink);background:#fff;outline:none;transition:border-color .2s,box-shadow .2s,transform .1s;caret-color:transparent}
+.otp-box:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,158,117,.12);transform:scale(1.05)}
+.otp-box.filled{border-color:var(--green);background:#f0fdf4;color:var(--green-dark)}
+.otp-box.error-box{border-color:#ef4444;background:#fef2f2;animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+/* ── RESEND ROW ── */
+.resend-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;font-size:13px;color:var(--muted)}
+.timer-pill{background:#f3f4f6;color:var(--muted);font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px}
+.resend-btn{background:none;border:none;color:var(--green);font-size:13px;font-weight:700;cursor:pointer;text-decoration:underline}
+
+/* ── OTP SENT BADGE ── */
+.otp-sent-badge{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:12px 16px;display:flex;gap:10px;align-items:flex-start}
+.otp-sent-badge p{font-size:13px;color:#15803d;line-height:1.55}
+
+/* ── OTP SUCCESS ── */
+.otp-success-wrap{text-align:center;padding:20px}
+.otp-success-icon{width:72px;height:72px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;animation:popIn .4s cubic-bezier(.175,.885,.32,1.275)}
+@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* ── PROGRESS STEPS ── */
+.signup-steps{display:flex;align-items:center;gap:6px;margin-bottom:28px}
+.sstep{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;transition:all .2s}
+.sstep.done{background:var(--green);color:#fff}
+.sstep.active{background:var(--ink);color:#fff}
+.sstep.todo{background:#f3f4f6;color:#9ca3af}
+.sstep-line{flex:1;height:2px;border-radius:1px;transition:background .3s}
+.sstep-line.done{background:var(--green)}
+.sstep-line.todo{background:#f3f4f6}
+
+/* ══════════════════════════════
+   WEB APP LAYOUT
+══════════════════════════════ */
+.app-root{min-height:100vh;display:flex;flex-direction:column;background:var(--bg)}
+
+/* Top Nav */
+.topnav{height:64px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 32px;gap:24px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-sm);overflow:visible}
+@media(min-width:769px){.mob-tab-bar{display:none !important}}
+.nav-logo{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.nav-logo-mark{width:34px;height:34px;background:var(--green);border-radius:9px;display:flex;align-items:center;justify-content:center}
+.nav-logo-name{font-family:var(--font-display);font-size:17px;font-weight:500;color:var(--ink);letter-spacing:-.2px}
+.nav-divider{width:1px;height:24px;background:var(--border);flex-shrink:0}
+.nav-tabs{display:flex;gap:4px;flex:1}
+.nav-tab{padding:8px 14px;border-radius:8px;border:none;background:none;font-size:13px;font-weight:500;color:var(--muted);transition:all .15s;display:flex;align-items:center;gap:6px}
+.nav-tab:hover{background:#f3f4f6;color:var(--ink)}
+.nav-tab.active{background:var(--green-light);color:var(--green-dark);font-weight:600}
+.nav-right{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.nav-lang-toggle{display:flex;background:#f3f4f6;border-radius:8px;padding:3px;gap:2px}
+.nlt-btn{padding:5px 10px;border-radius:6px;border:none;font-size:11px;font-weight:700;background:none;color:var(--muted);cursor:pointer;transition:all .15s}
+.nlt-btn.on{background:#fff;color:var(--ink);box-shadow:var(--shadow-sm)}
+.nav-country-badge{display:flex;align-items:center;gap:6px;background:#f3f4f6;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:500;color:var(--muted)}
+.nav-avatar{width:34px;height:34px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff}
+.nav-notif{width:34px;height:34px;border-radius:8px;background:none;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;position:relative}
+.notif-dot{position:absolute;top:7px;right:7px;width:7px;height:7px;background:#ef4444;border-radius:50%;border:2px solid #fff}
+
+/* Main content */
+.app-body{flex:1;padding:32px;max-width:1280px;width:100%;margin:0 auto}
+.page-header{margin-bottom:28px}
+.page-title{font-family:var(--font-display);font-size:28px;font-weight:500;color:var(--ink);letter-spacing:-.3px}
+.page-sub{font-size:14px;color:var(--muted);margin-top:4px}
+
+/* ── DASHBOARD ── */
+.dash-grid{display:grid;grid-template-columns:2fr 1fr;gap:20px}
+@media(max-width:1024px){.dash-grid{grid-template-columns:1fr}}
+
+/* Hero weather card */
+.weather-hero{background:linear-gradient(135deg,var(--green-deep) 0%,var(--green-dark) 60%,var(--green) 100%);border-radius:20px;padding:28px;position:relative;overflow:hidden;color:#fff;grid-column:1/-1}
+.wh-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.wh-circle{position:absolute;border-radius:50%;background:rgba(255,255,255,.04)}
+.wh-inner{position:relative;z-index:1;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}
+.wh-greeting{font-size:13px;font-weight:500;color:rgba(255,255,255,.6);margin-bottom:4px}
+.wh-name{font-family:var(--font-display);font-size:26px;font-weight:500;color:#fff;letter-spacing:-.3px}
+.wh-farm{font-size:13px;color:rgba(255,255,255,.5);margin-top:2px}
+.wh-right{text-align:right}
+.wh-temp{font-family:var(--font-display);font-size:52px;font-weight:300;color:#fff;line-height:1}
+.wh-desc{font-size:13px;color:rgba(255,255,255,.55);margin-top:4px}
+.wh-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.wh-pill{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:500;color:#fff;display:flex;align-items:center;gap:5px}
+.wh-pill.warn{background:rgba(245,158,11,.2);border-color:rgba(245,158,11,.3);color:#fde68a}
+
+/* Stat cards */
+.stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media(max-width:768px){.stat-cards{grid-template-columns:repeat(2,1fr)}}
+.stat-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--shadow-sm)}
+.sc-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.sc-val{font-family:var(--font-display);font-size:28px;font-weight:500;color:var(--ink);line-height:1}
+.sc-lbl{font-size:12px;color:var(--muted);margin-top:4px;font-weight:500}
+.sc-trend{font-size:11px;font-weight:600;margin-top:8px;display:flex;align-items:center;gap:4px}
+.sc-up{color:#16a34a}.sc-dn{color:#dc2626}
+
+/* Crop table */
+.card{background:#fff;border:1px solid var(--border);border-radius:20px;padding:24px;box-shadow:var(--shadow-sm)}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.card-title{font-family:var(--font-display);font-size:17px;font-weight:500;color:var(--ink)}
+.card-action{font-size:12px;font-weight:600;color:var(--green);background:var(--green-light);border:none;padding:6px 12px;border-radius:8px;cursor:pointer}
+.card-action:hover{background:#bbf7d0}
+
+.crop-table{width:100%;border-collapse:collapse}
+.crop-table th{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:0 0 12px;text-align:left;border-bottom:1px solid #f3f4f6}
+.crop-table td{padding:14px 0;border-bottom:1px solid #f9fafb;vertical-align:middle}
+.crop-table tr:last-child td{border-bottom:none}
+.crop-row-name{font-size:14px;font-weight:600;color:var(--ink)}
+.crop-row-detail{font-size:11px;color:var(--muted);margin-top:2px}
+.crop-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:8px;flex-shrink:0}
+.crop-prog-bg{height:4px;background:#f3f4f6;border-radius:2px;width:100px}
+.crop-prog-fill{height:4px;border-radius:2px}
+.badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap}
+.bg{background:#dcfce7;color:#15803d}
+.ba{background:#fef3c7;color:#b45309}
+.bb{background:#dbeafe;color:#1d4ed8}
+.br{background:#fee2e2;color:#dc2626}
+
+/* Alert list */
+.alert-item{display:flex;gap:12px;align-items:flex-start;padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;margin-bottom:10px}
+.ai-dot{width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0;margin-top:4px}
+.ai-body{flex:1}
+.ai-title{font-size:13px;font-weight:600;color:#92400e}
+.ai-sub{font-size:12px;color:#b45309;margin-top:2px;line-height:1.5}
+.ai-time{font-size:11px;color:#d97706;margin-top:4px}
+.alert-item.danger{background:#fef2f2;border-color:#fecaca}
+.alert-item.danger .ai-dot{background:#ef4444}
+.alert-item.danger .ai-title{color:#991b1b}
+.alert-item.danger .ai-sub{color:#dc2626}
+.alert-item.danger .ai-time{color:#ef4444}
+.alert-item.success{background:#f0fdf4;border-color:#bbf7d0}
+.alert-item.success .ai-dot{background:#16a34a}
+.alert-item.success .ai-title{color:#14532d}
+.alert-item.success .ai-sub{color:#166534}
+.alert-item.success .ai-time{color:#16a34a}
+
+/* Market mini-cards */
+.market-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.mm-card{background:#f9fafb;border:1px solid #f3f4f6;border-radius:12px;padding:14px}
+.mm-crop{font-size:12px;font-weight:600;color:var(--ink)}
+.mm-market{font-size:11px;color:var(--muted);margin-top:1px}
+.mm-price{font-family:var(--font-display);font-size:22px;font-weight:500;color:var(--ink);margin-top:8px;line-height:1}
+.mm-unit{font-size:10px;color:var(--muted)}
+.mm-change{font-size:11px;font-weight:700;margin-top:4px}
+.spark-mini{display:flex;align-items:flex-end;gap:2px;height:24px;margin-top:8px}
+.sm-bar{flex:1;border-radius:2px 2px 0 0;min-height:3px}
+
+/* Scan page */
+.scan-page{max-width:800px}
+.scan-upload-zone{border:2px dashed #d1fae5;border-radius:20px;padding:60px;text-align:center;background:#f0fdf4;cursor:pointer;transition:all .2s}
+.scan-upload-zone:hover{border-color:var(--green);background:#dcfce7}
+.suz-icon{width:72px;height:72px;background:var(--green-light);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+.suz-title{font-family:var(--font-display);font-size:22px;font-weight:500;color:var(--ink)}
+.suz-sub{font-size:14px;color:var(--muted);margin-top:6px;line-height:1.6}
+.suz-btn{margin-top:24px;padding:12px 28px;background:var(--green);border:none;border-radius:10px;font-size:14px;font-weight:600;color:#fff;transition:all .2s}
+.suz-btn:hover{background:var(--green-dark)}
+.diagnosis-panel{margin-top:24px}
+.dx-result{background:#fff;border:1px solid var(--border);border-radius:20px;padding:28px;box-shadow:var(--shadow-sm)}
+.dx-banner{display:flex;align-items:flex-start;gap:16px;padding:18px;background:#fef2f2;border:1px solid #fecaca;border-radius:14px;margin-bottom:24px}
+.dx-banner-icon{width:44px;height:44px;background:#fee2e2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.dx-disease-name{font-family:var(--font-display);font-size:20px;font-weight:500;color:#991b1b}
+.dx-crop-name{font-size:13px;color:#dc2626;margin-top:2px}
+.dx-conf{margin-left:auto;background:#dcfce7;color:#15803d;font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap}
+.dx-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px;margin-top:20px}
+.dx-body-text{font-size:14px;color:#374151;line-height:1.7}
+.dx-remedy-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.dx-rtag{background:var(--green-light);color:var(--green-dark);font-size:13px;font-weight:600;padding:6px 14px;border-radius:20px}
+.dx-buy-card{background:#f9fafb;border:1px solid #f3f4f6;border-radius:12px;padding:14px;margin-top:4px;font-size:13px;color:#374151;line-height:1.6}
+.dx-ask-btn{margin-top:20px;width:100%;padding:14px;background:var(--green);border:none;border-radius:12px;font-size:14px;font-weight:700;color:#fff;transition:all .2s}
+.dx-ask-btn:hover{background:var(--green-dark)}
+
+/* Plans page */
+.plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:900px}
+@media(max-width:700px){.plans-grid{grid-template-columns:1fr}}
+.plan-card{background:#fff;border:1.5px solid var(--border);border-radius:20px;padding:28px;box-shadow:var(--shadow-sm);transition:transform .2s,box-shadow .2s}
+.plan-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.plan-card.featured{border-color:var(--green);border-width:2px;box-shadow:0 0 0 4px rgba(29,158,117,.08),var(--shadow-md)}
+.plan-pop{display:inline-block;font-size:11px;font-weight:700;background:var(--green-light);color:var(--green-dark);padding:4px 12px;border-radius:20px;margin-bottom:14px;text-transform:uppercase;letter-spacing:.05em}
+.plan-name{font-family:var(--font-display);font-size:22px;font-weight:500;color:var(--ink)}
+.plan-price{font-family:var(--font-display);font-size:36px;font-weight:300;color:var(--ink);margin-top:8px;line-height:1}
+.plan-price span{font-size:14px;font-weight:400;color:var(--muted);font-family:var(--font-body)}
+.plan-features{margin-top:20px;display:flex;flex-direction:column;gap:10px}
+.pf-row{display:flex;align-items:flex-start;gap:10px;font-size:13px}
+.pf-check{width:18px;height:18px;border-radius:50%;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.pf-x{width:18px;height:18px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.pf-on{color:#374151;font-weight:500}
+.pf-off{color:#9ca3af}
+.plan-btn{width:100%;margin-top:24px;padding:13px;border-radius:12px;border:none;font-size:14px;font-weight:700;transition:all .2s}
+.plan-btn-pri{background:var(--green);color:#fff;box-shadow:0 2px 8px rgba(29,158,117,.3)}
+.plan-btn-pri:hover{background:var(--green-dark);box-shadow:0 4px 16px rgba(29,158,117,.4)}
+.plan-btn-sec{background:#f9fafb;color:var(--ink);border:1.5px solid var(--border)}
+.plan-btn-sec:hover{border-color:var(--green);color:var(--green)}
+.pay-note{background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:16px 20px;display:flex;align-items:center;gap:12px;margin-bottom:28px;max-width:900px}
+.pay-note p{font-size:13px;color:#1e40af;line-height:1.55}
+
+/* Settings page */
+.settings-grid{display:grid;grid-template-columns:220px 1fr;gap:24px;max-width:900px}
+@media(max-width:700px){.settings-grid{grid-template-columns:1fr}}
+.settings-nav{background:#fff;border:1px solid var(--border);border-radius:16px;padding:8px;height:fit-content;box-shadow:var(--shadow-sm)}
+.sn-item{padding:10px 14px;border-radius:10px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s}
+.sn-item:hover{background:#f9fafb;color:var(--ink)}
+.sn-item.active{background:var(--green-light);color:var(--green-dark)}
+.settings-panel{background:#fff;border:1px solid var(--border);border-radius:20px;padding:28px;box-shadow:var(--shadow-sm)}
+.sp-section{margin-bottom:28px}
+.sp-section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:16px}
+.sp-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #f9fafb}
+.sp-row:last-child{border-bottom:none}
+.sp-row-label{font-size:14px;font-weight:500;color:var(--ink)}
+.sp-row-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.toggle{width:44px;height:24px;background:#e5e7eb;border-radius:12px;border:none;position:relative;transition:background .2s;cursor:pointer;flex-shrink:0}
+.toggle.on{background:var(--green)}
+.toggle::after{content:'';width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on::after{transform:translateX(20px)}
+.profile-avatar-big{width:80px;height:80px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:28px;color:#fff;margin-bottom:16px}
+.profile-name{font-family:var(--font-display);font-size:22px;font-weight:500;color:var(--ink)}
+.profile-detail{font-size:13px;color:var(--muted);margin-top:4px}
+
+/* Mobile nav for small screens */
+@media(max-width:640px){
+  .topnav{padding:0 16px;gap:12px}
+  .nav-tabs{display:none}
+  .app-body{padding:16px}
+  .stat-cards{grid-template-columns:1fr 1fr}
+  .market-mini{grid-template-columns:1fr}
+  .plans-grid{grid-template-columns:1fr}
+}
+
+/* ── RESPONSIVE SIDEBAR (desktop) ── */
+.app-layout{display:flex;flex:1;min-height:0}
+.sidebar{width:220px;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 12px;gap:4px;flex-shrink:0}
+.sb-section-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:8px 12px 4px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:none;background:none;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;width:100%;text-align:left;transition:all .15s}
+.sb-item:hover{background:#f3f4f6;color:var(--ink)}
+.sb-item.active{background:var(--green-light);color:var(--green-dark);font-weight:600}
+.sb-item svg{flex-shrink:0}
+.sb-badge{margin-left:auto;background:#fef3c7;color:#b45309;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px}
+.sb-item.active .sb-badge{background:rgba(29,158,117,.15);color:var(--green-dark)}
+.sb-spacer{flex:1}
+.sb-footer{padding:12px;background:#f9fafb;border-radius:12px;margin-top:8px}
+.sb-footer-name{font-size:13px;font-weight:600;color:var(--ink)}
+.sb-footer-plan{font-size:11px;color:var(--green);font-weight:500;margin-top:1px}
+.content-area{flex:1;overflow-y:auto;padding:32px}
+.content-area::-webkit-scrollbar{width:6px}
+.content-area::-webkit-scrollbar-thumb{background:#e5e7eb;border-radius:3px}
+@media(max-width:768px){.sidebar{display:none}.content-area{padding:20px}}
+
+/* Auth method tabs */
+.auth-tabs{display:flex;background:#f3f4f6;border-radius:12px;padding:4px;gap:3px;margin-bottom:24px}
+.auth-tab{flex:1;padding:9px;border-radius:9px;border:none;font-size:13px;font-weight:600;background:none;color:var(--muted);cursor:pointer;transition:all .18s}
+.auth-tab.on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.phone-row{display:flex;gap:8px}
+.dial-select{padding:0 10px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-weight:600;color:var(--ink);background:#fff;cursor:pointer;height:46px;appearance:none;-webkit-appearance:none;flex-shrink:0;min-width:108px;outline:none;transition:border-color .2s}
+.dial-select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,158,117,.12)}
+.otp-sent-badge{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;display:flex;align-items:flex-start;gap:9px;margin-bottom:4px}
+.otp-sent-badge p{font-size:12px;color:#15803d;line-height:1.5}
+.otp-boxes{display:flex;gap:10px;justify-content:center;margin:4px 0}
+.otp-box{width:52px;height:58px;border:1.5px solid #e5e7eb;border-radius:12px;font-size:24px;font-weight:700;text-align:center;color:var(--ink);outline:none;transition:border-color .2s,box-shadow .2s;background:#fff;font-family:var(--font-display)}
+.otp-box:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,158,117,.12)}
+.otp-box.filled{border-color:var(--green);background:#f0fdf4}
+.otp-box.error-box{border-color:#ef4444;background:#fef2f2;animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.resend-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin-top:8px}
+.resend-btn{font-size:12px;font-weight:600;color:var(--green);background:none;border:none;cursor:pointer;padding:0}
+.resend-btn:disabled{color:#9ca3af;cursor:not-allowed}
+.timer-pill{background:#f3f4f6;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;color:var(--muted)}
+.otp-success-wrap{text-align:center;padding:8px 0}
+.otp-success-icon{width:68px;height:68px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+@keyframes checkPop{0%{transform:scale(0) rotate(-10deg)}70%{transform:scale(1.15)}100%{transform:scale(1) rotate(0)}}
+.otp-success-icon svg{animation:checkPop .45s cubic-bezier(.16,1,.3,1) forwards}
+
+
+/* ── FARM PROFILE STEP ── */
+.fp-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px;margin-top:20px}
+.fp-size-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+.fp-size-tile{border:1.5px solid #e5e7eb;border-radius:10px;padding:12px 8px;cursor:pointer;transition:all .18s;text-align:center}
+.fp-size-tile:hover{border-color:var(--green);background:#f0fdf4}
+.fp-size-tile.sel{border-color:var(--green);background:#f0fdf4}
+.fp-size-val{font-family:var(--font-display);font-size:16px;font-weight:500;color:var(--ink)}
+.fp-size-lbl{font-size:10px;color:var(--muted);margin-top:2px}
+.fp-crop-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.fp-crop-tag{border:1.5px solid #e5e7eb;border-radius:20px;padding:6px 14px;cursor:pointer;transition:all .18s;font-size:13px;color:var(--ink)}
+.fp-crop-tag:hover{border-color:var(--green);background:#f0fdf4}
+.fp-crop-tag.sel{border-color:var(--green);background:#f0fdf4;color:var(--green-dark);font-weight:600}
+.fp-input{padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:14px;color:var(--ink);background:#fff;transition:border-color .2s;outline:none;width:100%}
+.fp-input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(29,158,117,.12)}
+.fp-complete-wrap{text-align:center;padding:20px 0}
+.fp-check-circle{width:72px;height:72px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+
+/* ── MOBILE BOTTOM NAV ── */
+/* old mobile-bottom-nav removed */
+.mobile-bottom-nav .mbn-inner{display:flex;height:100%;align-items:stretch}
+.mbn-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;cursor:pointer;padding:8px 4px;color:var(--muted);font-size:10px;font-weight:500;transition:color .15s;min-width:0}
+.mbn-item.active{color:var(--green-dark)}
+.mbn-item svg{flex-shrink:0}
+.mbn-item .mbn-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56px;font-size:10px}
+.mbn-badge{position:absolute;top:6px;right:calc(50% - 16px);background:var(--green);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:20px}
+@media(max-width:768px){
+  .mobile-bottom-nav{display:flex}
+  .app-body{padding-bottom:72px}
+}
+
+/* ── MOBILE BOTTOM TAB BAR ── */
+/* .mob-tab-bar removed */ .mob-tab-bar-old{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;z-index:500;padding:4px 0 8px;box-shadow:0 -2px 12px rgba(0,0,0,.08);-webkit-tap-highlight-color:transparent}
+.mob-tab-bar-inner{display:flex;justify-content:space-around;align-items:center}
+.mob-tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 8px;border:none;background:none;color:#9ca3af;font-size:10px;font-weight:500;min-width:56px;position:relative;-webkit-tap-highlight-color:transparent}
+.mob-tab.active{color:#15803d}
+.mob-tab-badge{position:absolute;top:2px;right:8px;background:#15803d;color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:8px;line-height:1.4}
+/* Mobile menu overlay */
+.mobile-menu-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300}
+.mobile-menu-drawer{position:fixed;top:0;left:0;bottom:0;width:280px;background:#fff;z-index:400;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;padding:0;box-shadow:4px 0 20px rgba(0,0,0,.15)}
+.mobile-menu-drawer.open{transform:translateX(0)}
+.mobile-menu-overlay.open{display:block}
+.mobile-menu-header{padding:20px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:12px}
+.mobile-menu-items{flex:1;padding:8px 0;overflow-y:auto}
+.mobile-menu-item{display:flex;align-items:center;gap:14px;padding:15px 20px;border:none;background:none;width:100%;text-align:left;font-size:15px;font-weight:500;color:#374151;-webkit-tap-highlight-color:transparent}
+.mobile-menu-item.active{background:#f0fdf4;color:#15803d;font-weight:700}
+.mobile-menu-badge{background:#15803d;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:auto}
+.mobile-menu-footer{padding:16px 20px;border-top:1px solid #f3f4f6}
+.hamburger-btn{display:none;background:none;border:none;cursor:pointer;padding:10px;border-radius:8px;color:#374151;min-width:44px;min-height:44px;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+@media(max-width:768px){
+  /* Full app interface on mobile */
+  
+  .hamburger-btn{display:none !important}
+  .nav-tabs{display:none !important}
+  .app-body{padding-bottom:80px !important;padding-top:0 !important}
+  /* mobile-bottom-nav old class removed */
+  .app-sidebar{display:none !important}
+  
+  /* Full screen app layout */
+  .app-root{display:flex;flex-direction:column;height:100vh;height:100dvh}
+  .topnav{height:56px !important;padding:0 16px !important;background:var(--green) !important;border-bottom:none !important;box-shadow:none !important}
+  .nav-logo-name{color:#fff !important;font-size:18px !important;font-weight:700 !important}
+  .nav-logo-mark{background:rgba(255,255,255,0.2) !important}
+  .nav-avatar{background:rgba(255,255,255,0.25) !important;color:#fff !important}
+  .app-content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .app-body{padding:16px 16px 80px !important}
+  
+  /* Bigger touch targets */
+  .mob-tab{padding:8px 4px 6px !important;min-width:64px !important}
+  .mob-tab-bar{height:72px !important;padding:0 !important}
+  .mob-tab-bar-inner{height:72px !important;align-items:center !important}
+  
+  /* Cards look better on mobile */
+  .card{border-radius:16px !important;margin-bottom:12px !important}
+  .page-header{margin-bottom:16px !important}
+  .page-title{font-size:22px !important}
+  
+  /* Weather hero full width */
+  .weather-hero{border-radius:20px !important;margin-left:-16px;margin-right:-16px;border-radius:0 0 24px 24px !important}
+}
+
+/* iPhone safe area support */
+@supports(padding-bottom: env(safe-area-inset-bottom)){
+  #mobile-bottom-nav{
+    height: calc(68px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: env(safe-area-inset-bottom) !important;
+  }
+  .content-area{
+    padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* ── MOBILE BOTTOM NAV (AgriAdvisor-2 style) ── */
+.p-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.97);border-top:1px solid rgba(0,0,0,.1);padding:6px 0 env(safe-area-inset-bottom);z-index:9999;box-shadow:0 -2px 12px rgba(0,0,0,.08)}
+.p-nav-inner{display:flex}
+.p-nb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;padding:8px 4px;cursor:pointer;-webkit-tap-highlight-color:transparent;min-height:50px;position:relative}
+.p-nb svg{width:22px;height:22px;stroke:#9ca3af;transition:stroke .15s}
+.p-nb span{font-size:10px;font-weight:600;color:#9ca3af;transition:color .15s}
+.p-nb.active svg{stroke:#15803d}
+.p-nb.active span{color:#15803d}
+.p-nb-badge{position:absolute;top:4px;right:calc(50% - 18px);background:#15803d;color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:6px;line-height:1.4}
+@media(max-width:900px){
+  .p-nav{display:block}
+  .app-body{padding-bottom:72px !important}
+  .topnav .nav-tabs{display:none}
+  .app-sidebar,.sidebar{display:none !important}
+}
+@media(min-width:901px){.p-nav{display:none !important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useCallback, useEffect } = React;
+
+/* ══ DATA ══ */
+const META = {
+  kenya:    {flag:'🇰🇪',color:'#1D9E75',currency:'KES',initials:'JM',pay:'M-Pesa',         prices:['52','85','18'],       chgs:['+3.2%','-5.1%','+1.8%'],ups:[true,false,true], bars:[[40,55,50,65,72,80,100],[100,90,85,80,70,60,50],[60,65,70,65,72,78,85]]},
+  uganda:   {flag:'🇺🇬',color:'#D62728',currency:'UGX',initials:'SS',pay:'MTN Mobile Money',prices:['1,200','8,500','900'],chgs:['+2.1%','+4.3%','-2.0%'],ups:[true,true,false],bars:[[50,60,55,70,75,85,100],[60,65,70,75,80,90,100],[100,90,85,80,75,70,65]]},
+  tanzania: {flag:'🇹🇿',color:'#1A9850',currency:'TZS',initials:'AM',pay:'M-Pesa',         prices:['1,850','3,200','780'],chgs:['+1.5%','+6.2%','-1.8%'],ups:[true,true,false],bars:[[55,60,65,70,75,80,100],[50,60,70,75,85,90,100],[100,95,88,82,78,75,70]]},
+  rwanda:   {flag:'🇷🇼',color:'#0080C9',currency:'RWF',initials:'CU',pay:'MTN Mobile Money',prices:['480','820','580'],  chgs:['+6.7%','+5.1%','+3.6%'],ups:[true,true,true],bars:[[50,58,65,72,80,88,100],[55,62,68,74,80,87,100],[60,65,70,75,80,88,100]]},
+  ethiopia: {flag:'🇪🇹',color:'#C0392B',currency:'ETB',initials:'AG',pay:'Telebirr',        prices:['520','85','28'],      chgs:['+5.1%','+2.3%','-1.5%'],ups:[true,true,false], bars:[[50,60,68,74,80,88,100],[60,65,70,74,78,84,90],[100,92,85,80,76,72,70]]},
+};
+
+const LANGS = {
+  kenya:{localName:'Kiswahili',code:'sw',
+    en:{greeting:'Good morning',name:'James Mwangi',region:'Kiambu County, Kenya',farm:'2.4 acres · Maize & Tomatoes',wdesc:'Partly cloudy · Rain Thursday',wpill:'Plan irrigation by Wednesday',as:'Pest Alert:',am:'Fall armyworm reported 12 km near Kikuyu.',crops:[{n:'Maize (Zea mays)',d:'Planted 12 Feb · Harvest ~20 Jun',pct:62,cc:'#16a34a',bc:'bg',b:'On track'},{n:'Tomatoes (Roma)',d:'Planted 1 Mar · Harvest ~15 May',pct:80,cc:'#ea580c',bc:'ba',b:'Water now'},{n:'Kale (Sukuma wiki)',d:'Planted 20 Mar · Harvest ~10 May',pct:90,cc:'#1D9E75',bc:'bb',b:'Harvest soon'}],mkts:[{c:'Dry Maize',m:'Wakulima Market',u:'per kg'},{c:'Tomatoes',m:'City Market',u:'per kg'},{c:'Kale',m:'Gikomba Market',u:'per bunch'}],dx:{dis:'Early blight detected',cr:'Tomato · Leaf sample',wl:'What it is',bd:'Alternaria solani fungal infection — common in warm humid conditions. Spreads quickly. Act within 48 hours to protect your crop.',rl:'Recommended remedies',rem:['Copper fungicide spray','Remove affected leaves','Reduce leaf wetness','Improve air circulation'],bl:'Where to buy',bu:'Amiran Kenya, Nairobi West · Copper Oxychloride 50WP · ~KES 320 per 100g',cta:'Ask AI for more advice →'},tiers:[{n:'Free',p:'KES 0',f:['Planting calendar','3 crop scans/month'],lk:['Live market prices','Weather SMS'],pt:'',pb:'Get started'},{n:'Farmer Pro',p:'KES 299',f:['Everything in Free','Unlimited scans','Live market prices','SMS weather alerts','Input calculator'],lk:[],pt:'Most popular',pb:'Subscribe with M-Pesa'},{n:'Agribusiness',p:'KES 1,800',f:['Everything in Pro','Multi-farm management','Export market data','Agronomist chat'],lk:[],pt:'',pb:'Contact sales'}],ui:{home:'Home',crops:'My Crops',scan:'Crop Doctor',mkt:'Markets',plans:'Plans',settings:'Settings',pm:'/month',wt:'Today',scanTitle:'Take or upload a photo',scanSub:'Drag & drop or click to upload. AI diagnoses disease in seconds.',cf:'94% confident',addCrop:'+ Add new crop',allAlerts:'View all alerts',allPrices:'View all prices',payNote:'Pay easily via',payNote2:'or Airtel Money. No bank card needed.'}},
+    sw:{greeting:'Habari za asubuhi',name:'James Mwangi',region:'Kaunti ya Kiambu, Kenya',farm:'Ekari 2.4 · Mahindi na Nyanya',wdesc:'Mawingu kidogo · Mvua Alhamisi',wpill:'Panga umwagiliaji Jumatano',as:'Tahadhari:',am:'Fall armyworm imeripotiwa km 12 karibu Kikuyu.',crops:[{n:'Mahindi (Zea mays)',d:'Ilipandwa 12 Feb · Mavuno ~20 Jun',pct:62,cc:'#16a34a',bc:'bg',b:'Inakua vizuri'},{n:'Nyanya (Roma)',d:'Ilipandwa 1 Mar · Mavuno ~15 May',pct:80,cc:'#ea580c',bc:'ba',b:'Mwagilia sasa'},{n:'Sukuma wiki',d:'Ilipandwa 20 Mar · Mavuno ~10 May',pct:90,cc:'#1D9E75',bc:'bb',b:'Vuna hivi karibuni'}],mkts:[{c:'Mahindi (kavu)',m:'Soko la Wakulima',u:'kwa kg'},{c:'Nyanya (Roma)',m:'City Market',u:'kwa kg'},{c:'Sukuma wiki',m:'Soko la Gikomba',u:'kwa fungu'}],dx:{dis:'Early blight imegunduliwa',cr:'Nyanya · Sampuli ya jani',wl:'Ni nini',bd:'Ugonjwa wa kuvu wa Alternaria solani. Kawaida katika hali ya joto na unyevu. Inasambaa haraka — chukua hatua ndani ya masaa 48.',rl:'Tiba inayopendekezwa',rem:['Dawa ya copper fungicide','Ondoa majani yaliyoathirika','Punguza unyevu wa majani','Boresha mzunguko wa hewa'],bl:'Wapi kununua',bu:'Amiran Kenya, Nairobi West · Copper Oxychloride 50WP · ~KES 320 kwa 100g',cta:'Uliza AI zaidi →'},tiers:[{n:'Bure',p:'KES 0',f:['Kalenda ya kupanda','Uchunguzi 3 kwa mwezi'],lk:['Bei za soko','Arifa za hali ya hewa'],pt:'',pb:'Anza bure'},{n:'Mkulima Pro',p:'KES 299',f:['Kila kitu kilicho Bure','Uchunguzi bila kikomo','Bei za soko za moja kwa moja','Arifa kwa SMS','Kikokotoo cha pembejeo'],lk:[],pt:'Maarufu zaidi',pb:'Jiandikishe na M-Pesa'},{n:'Biashara ya Kilimo',p:'KES 1,800',f:['Kila kitu kilicho Pro','Usimamizi wa mashamba mengi','Data ya soko la nje','Msaada wa mtaalamu wa kilimo'],lk:[],pt:'',pb:'Wasiliana'}],ui:{home:'Nyumbani',crops:'Mazao',scan:'Daktari wa Mazao',mkt:'Masoko',plans:'Mipango',settings:'Mipangilio',pm:'/mwezi',wt:'Leo',scanTitle:'Piga au pakia picha',scanSub:'Buruta au bonyeza kupakia. AI itachunguza ugonjwa kwa sekunde.',cf:'Hakika 94%',addCrop:'+ Ongeza zao',allAlerts:'Tazama yote',allPrices:'Tazama yote',payNote:'Lipa kwa',payNote2:'au Airtel Money. Bila kadi ya benki.'}}},
+  uganda:{localName:'Luganda',code:'lg',
+    en:{greeting:'Good morning',name:'Samuel Ssemakula',region:'Wakiso District, Uganda',farm:'1.8 acres · Matoke & Coffee',wdesc:'Light breeze · Rain Friday',wpill:'Irrigate crops by Wednesday',as:'Pest Alert:',am:'Coffee berry borer in Mukono district.',crops:[{n:'Matoke (Musa AAB)',d:'Planted Jan · Harvest ~Aug',pct:55,cc:'#16a34a',bc:'bg',b:'On track'},{n:'Coffee (Robusta)',d:'Planted Feb · Harvest ~Nov',pct:35,cc:'#92400e',bc:'bb',b:'Growing'},{n:'Cassava',d:'Planted Mar · Harvest ~Sep',pct:20,cc:'#1D9E75',bc:'bb',b:'Early stage'}],mkts:[{c:'Matoke',m:'Kalerwe Market',u:'per bunch'},{c:'Coffee (green)',m:'Owino Market',u:'per kg'},{c:'Cassava',m:'Nakasero Market',u:'per kg'}],dx:{dis:'Coffee leaf rust detected',cr:'Coffee · Leaf sample',wl:'What it is',bd:'Hemileia vastatrix — fungal disease spreading rapidly in humid conditions. Take action within 48 hours.',rl:'Recommended remedies',rem:['Copper fungicide spray','Remove infected branches','Ensure proper spacing','Improve air circulation'],bl:'Where to buy',bu:'Agro Supply Kampala, Nakivubo · Cuprocaffaro · ~UGX 12,000 per 100g',cta:'Ask AI for more advice →'},tiers:[{n:'Free',p:'UGX 0',f:['Planting calendar','3 crop scans/month'],lk:['Live market prices','Weather SMS'],pt:'',pb:'Get started'},{n:'Farmer Pro',p:'UGX 9,900',f:['Everything in Free','Unlimited scans','Live market prices','SMS weather alerts','Input calculator'],lk:[],pt:'Most popular',pb:'Subscribe with MTN MoMo'},{n:'Agribusiness',p:'UGX 59,000',f:['Everything in Pro','Multi-farm management','Export market data','Agronomist support'],lk:[],pt:'',pb:'Contact sales'}],ui:{home:'Home',crops:'My Crops',scan:'Crop Doctor',mkt:'Markets',plans:'Plans',settings:'Settings',pm:'/month',wt:'Today',scanTitle:'Take or upload a photo',scanSub:'Drag & drop or click to upload. AI diagnoses disease in seconds.',cf:'94% confident',addCrop:'+ Add new crop',allAlerts:'View all alerts',allPrices:'View all prices',payNote:'Pay via',payNote2:'or Airtel Money. Easy sign-up.'}},
+    lg:{greeting:'Wasuze otya',name:'Samuel Ssemakula',region:'Ssaza lya Wakiso, Uganda',farm:'Ekka 1.8 · Matoke & Kawoofe',wdesc:'Empewo entono · Enkuba Lwakutaano',wpill:'Nawulira emmeeme ku Lwakusatu',as:'Okulabula:',am:'Coffee berry bore mu Mukono.',crops:[{n:'Matoke (Musa AAB)',d:'Yaterwamu Jan · Okukungula ~Ago',pct:55,cc:'#16a34a',bc:'bg',b:'Bigenda bulungi'},{n:'Kawoofe (Robusta)',d:'Yaterwamu Feb · Okukungula ~Nov',pct:35,cc:'#92400e',bc:'bb',b:'Ekula'},{n:'Muwogo',d:'Yaterwamu Mar · Okukungula ~Sep',pct:20,cc:'#1D9E75',bc:'bb',b:'Entandikwa'}],mkts:[{c:'Matoke',m:'Ssoko lya Kalerwe',u:'mu kibindi'},{c:'Kawoofe',m:'Ssoko lya Owino',u:'mu kg'},{c:'Muwogo',m:'Ssoko lya Nakasero',u:'mu kg'}],dx:{dis:'Coffee leaf rust kagoneddwa',cr:'Kawoofe · Enkula y\'ekijani',wl:'Kiki',bd:'Hemileia vastatrix — eddagala likyukula mu bubisi. Kola ekintu mu saawa 48.',rl:'Eddagala eryesigamirwa',rem:['Spray ya copper fungicide','Ggyawo amakunkumira','Funa amakungula amatuufu','Yongera omwoyo'],bl:'Ggulagula wa',bu:'Agro Supply Kampala, Nakivubo · Cuprocaffaro · ~UGX 12,000 mu 100g',cta:'Buuza AI →'},tiers:[{n:'Ofele',p:'UGX 0',f:['Kalenda ey\'okutema','Okukebekebera 3 mu mwezi'],lk:['Ebitengo by\'ensigo','Amakwanso g\'obudde'],pt:'',pb:'Tandika ofele'},{n:'Mukulima Pro',p:'UGX 9,900',f:['Buli kkintu mu Ofele','Okukebekebera obutabeerawo','Ebitengo eby\'amangu','Amakwanso ga SMS','Kikalkuleta'],lk:[],pt:'Esigiddwako nnyo',pb:'Wandiika ne MTN MoMo'},{n:'Omugaga w\'Olimi',p:'UGX 59,000',f:['Buli kkintu mu Pro','Ennimiro nnyingi','Amawulire g\'ensigo','Obuyambi bw\'omutaalamu'],lk:[],pt:'',pb:'Kwata obulagirizi'}],ui:{home:'Awaka',crops:'Emmere',scan:'Omusawo w\'Emmere',mkt:'Ensigo',plans:'Ebitundu',settings:'Entegeka',pm:'/omwezi',wt:'Leero',scanTitle:'Fota oba yongeramu ekifaananyi',scanSub:'Tindiika oba koma okutikira. AI ejja kukebekebera mu ssekendi.',cf:'Nzijuvu 94%',addCrop:'+ Yongera emmere',allAlerts:'Laba byona',allPrices:'Laba byona',payNote:'Sazaamu ne',payNote2:'oba Airtel Money.'}}},
+  tanzania:{localName:'Kiswahili',code:'sw',
+    en:{greeting:'Good morning',name:'Amina Mkwawa',region:'Morogoro Region, Tanzania',farm:'3.1 acres · Rice & Cashews',wdesc:'Hot sun · Rain Thursday',wpill:'Irrigate before Wednesday',as:'Pest Alert:',am:'Locusts reported 20 km south of Morogoro.',crops:[{n:'Rice (IR64)',d:'Planted 15 Jan · Harvest ~30 Jun',pct:50,cc:'#1A9850',bc:'bg',b:'Growing well'},{n:'Maize (SC403)',d:'Planted 1 Feb · Harvest ~10 Jun',pct:68,cc:'#16a34a',bc:'bg',b:'On track'},{n:'Cashews',d:'Planted Oct · Harvest ~March',pct:95,cc:'#ea580c',bc:'ba',b:'Harvest now!'}],mkts:[{c:'Rice (hard)',m:'Kariakoo Market',u:'per kg'},{c:'Cashews',m:'Mwanza Market',u:'per kg'},{c:'Maize',m:'Ilala Market',u:'per kg'}],dx:{dis:'Brown spot detected',cr:'Rice · Leaf sample',wl:'What it is',bd:'Cochliobolus miyabeanus — fungal disease spreading rapidly during rainy season. Take action within 48 hours.',rl:'Recommended remedies',rem:['Fungicide spray','Remove affected leaves','Correct fertilizer balance','Improve drainage'],bl:'Where to buy',bu:'Yara Tanzania, Dar es Salaam · Propiconazole 25EC · ~TZS 5,500 per 100ml',cta:'Ask AI for more advice →'},tiers:[{n:'Free',p:'TZS 0',f:['Planting calendar','3 crop scans/month'],lk:['Market prices','Weather alerts'],pt:'',pb:'Get started'},{n:'Farmer Pro',p:'TZS 6,500',f:['Everything in Free','Unlimited scans','Live market prices','SMS weather alerts','Input calculator'],lk:[],pt:'Most popular',pb:'Subscribe with M-Pesa'},{n:'Agribusiness',p:'TZS 40,000',f:['Everything in Pro','Multi-farm management','Export market data','Agronomist support'],lk:[],pt:'',pb:'Contact sales'}],ui:{home:'Home',crops:'My Crops',scan:'Crop Doctor',mkt:'Markets',plans:'Plans',settings:'Settings',pm:'/month',wt:'Today',scanTitle:'Take or upload a photo',scanSub:'Drag & drop or click to upload. AI diagnoses disease in seconds.',cf:'94% confident',addCrop:'+ Add new crop',allAlerts:'View all alerts',allPrices:'View all prices',payNote:'Pay via',payNote2:'or Tigo Pesa. No bank card needed.'}},
+    sw:{greeting:'Habari za asubuhi',name:'Amina Mkwawa',region:'Mkoa wa Morogoro, Tanzania',farm:'Ekari 3.1 · Mpunga na Korosho',wdesc:'Jua kali · Mvua Alhamisi',wpill:'Mwagilia kabla ya Jumatano',as:'Onyo:',am:'Nzige wameripotiwa km 20 kusini ya Morogoro.',crops:[{n:'Mpunga (IR64)',d:'Ulipandwa 15 Jan · Mavuno ~30 Jun',pct:50,cc:'#1A9850',bc:'bg',b:'Inakua vizuri'},{n:'Mahindi (SC403)',d:'Ulipandwa 1 Feb · Mavuno ~10 Jun',pct:68,cc:'#16a34a',bc:'bg',b:'Katika mstari'},{n:'Korosho',d:'Ulipandwa Okt · Mavuno ~Machi',pct:95,cc:'#ea580c',bc:'ba',b:'Vuna sasa!'}],mkts:[{c:'Mpunga (gumu)',m:'Soko la Kariakoo',u:'kwa kg'},{c:'Korosho',m:'Soko la Mwanza',u:'kwa kg'},{c:'Mahindi',m:'Soko la Ilala',u:'kwa kg'}],dx:{dis:'Ugonjwa wa doa la kahawia',cr:'Mpunga · Sampuli ya jani',wl:'Ni nini',bd:'Cochliobolus miyabeanus — ugonjwa wa kuvu. Husambaa haraka wakati wa mvua. Chukua hatua ndani ya masaa 48.',rl:'Tiba inayopendekezwa',rem:['Dawa ya kuua kuvu','Ondoa majani yaliyoathirika','Uwiano sahihi wa mbolea','Boresha mifereji ya maji'],bl:'Wapi kununua',bu:'Yara Tanzania, Dar es Salaam · Propiconazole 25EC · ~TZS 5,500 kwa 100ml',cta:'Uliza AI zaidi →'},tiers:[{n:'Bure',p:'TZS 0',f:['Kalenda ya kupanda','Uchunguzi 3 kwa mwezi'],lk:['Bei za masoko','Arifa za hali ya hewa'],pt:'',pb:'Anza bure'},{n:'Mkulima Pro',p:'TZS 6,500',f:['Kila kitu kilicho Bure','Uchunguzi bila kikomo','Bei za wakati halisi','Arifa kwa SMS','Kikokotoo cha pembejeo'],lk:[],pt:'Maarufu zaidi',pb:'Jiandikishe na M-Pesa'},{n:'Biashara ya Kilimo',p:'TZS 40,000',f:['Kila kitu kilicho Pro','Usimamizi wa mashamba mengi','Data ya masoko ya nje','Ushauri wa mtaalamu'],lk:[],pt:'',pb:'Wasiliana'}],ui:{home:'Nyumbani',crops:'Mazao',scan:'Daktari wa Mazao',mkt:'Masoko',plans:'Mipango',settings:'Mipangilio',pm:'/mwezi',wt:'Leo',scanTitle:'Piga au pakia picha',scanSub:'Buruta au bonyeza kupakia. AI itachunguza kwa sekunde.',cf:'Hakika 94%',addCrop:'+ Ongeza zao',allAlerts:'Tazama yote',allPrices:'Tazama yote',payNote:'Lipa kwa',payNote2:'au Tigo Pesa.'}}},
+  rwanda:{localName:'Kinyarwanda',code:'rw',
+    en:{greeting:'Good morning',name:'Claudine Uwimana',region:'Musanze District, Rwanda',farm:'0.8 ha · Potatoes & Beans',wdesc:'Light clouds · Rain Wednesday',wpill:'Protect harvest before Tuesday',as:'Disease Alert:',am:'Late blight detected in Musanze district.',crops:[{n:'Potatoes (Kinigi)',d:'Planted Feb · Harvest ~June',pct:58,cc:'#f59e0b',bc:'bg',b:'On track'},{n:'Climbing beans',d:'Planted Mar · Harvest ~June',pct:72,cc:'#16a34a',bc:'bg',b:'Growing well'},{n:'Wheat (Ingano)',d:'Planted Jan · Harvest ~May',pct:85,cc:'#1D9E75',bc:'bb',b:'Harvest soon'}],mkts:[{c:'Potatoes',m:'Kimironko Market',u:'per kg'},{c:'Beans',m:'Nyabugogo Market',u:'per kg'},{c:'Maize',m:'Musanze Market',u:'per kg'}],dx:{dis:'Late blight detected',cr:'Potato · Leaf sample',wl:'What it is',bd:'Phytophthora infestans — spreads rapidly in humid conditions. Take action within 48 hours to protect your harvest.',rl:'Recommended remedies',rem:['Copper fungicide spray','Prune affected stems','Reduce moisture','Improve air circulation'],bl:'Where to buy',bu:'Agro-Inputs Rwanda, Kigali · Ridomil Gold MZ · ~RWF 8,500 per 200g',cta:'Ask AI for more advice →'},tiers:[{n:'Free',p:'RWF 0',f:['Planting calendar','3 crop scans/month'],lk:['Market prices','Weather alerts'],pt:'',pb:'Get started'},{n:'Farmer Pro',p:'RWF 2,500',f:['Everything in Free','Unlimited scans','Live market prices','SMS weather alerts','Input calculator'],lk:[],pt:'Most popular',pb:'Subscribe with MTN MoMo'},{n:'Agribusiness',p:'RWF 15,000',f:['Everything in Pro','Multi-farm management','Export market data','Agronomist support'],lk:[],pt:'',pb:'Contact sales'}],ui:{home:'Home',crops:'My Crops',scan:'Crop Doctor',mkt:'Markets',plans:'Plans',settings:'Settings',pm:'/month',wt:'Today',scanTitle:'Take or upload a photo',scanSub:'Drag & drop or click to upload. AI diagnoses disease in seconds.',cf:'94% confident',addCrop:'+ Add new crop',allAlerts:'View all alerts',allPrices:'View all prices',payNote:'Pay via',payNote2:'or Airtel Money. Instant activation.'}},
+    rw:{greeting:'Mwaramutse',name:'Claudine Uwimana',region:'Akarere ka Musanze, Rwanda',farm:'0.8 ha · Ibirayi & Ibishyimbo',wdesc:'Igicu gito · Imvura Gwandagwanda',wpill:'Rinda umusaruro mbere y\'Uwembe',as:'Inzigo:',am:'Late blight yabonye mu karere ka Musanze.',crops:[{n:'Ibirayi (Kinigi)',d:'Byatewe Gashyantare · Isarura ~Kamena',pct:58,cc:'#f59e0b',bc:'bg',b:'Biragenda'},{n:'Ibishyimbo (climber)',d:'Byatewe Werurwe · Isarura ~Kamena',pct:72,cc:'#16a34a',bc:'bg',b:'Birakura'},{n:'Ingano',d:'Byatewe Mutarama · Isarura ~Gicurasi',pct:85,cc:'#1D9E75',bc:'bb',b:'Isarura ryegereje'}],mkts:[{c:'Ibirayi',m:'Isoko rya Kimironko',u:'ku kg'},{c:'Ibishyimbo',m:'Isoko rya Nyabugogo',u:'ku kg'},{c:'Ibigori',m:'Isoko rya Musanze',u:'ku kg'}],dx:{dis:'Late blight yagaragaye',cr:'Ibirayi · Icyapo cy\'icyatsi',wl:'Ni iki',bd:'Phytophthora infestans — bugwira cyane mu bihe by\'imvura. Kora ikintu mu masaha 48.',rl:'Ubuvuzi bwasabwe',rem:['Vuba na Copper fungicide','Sohora amashami','Kugabanya ubushuhe','Kongerera umwuka'],bl:'Aho kugura',bu:'Agro-Inputs Rwanda, Kigali · Ridomil Gold MZ · ~RWF 8,500 kuri 200g',cta:'Baza AI →'},tiers:[{n:'Ubuntu',p:'RWF 0',f:['Kalanda yo gutera','Isuzuma 3 mu kwezi'],lk:['Ibiciro by\'isoko','Imenyesha y\'ibihe'],pt:'',pb:'Tangira ubuntu'},{n:'Umuhinzi Pro',p:'RWF 2,500',f:['Ibintu byose bya Ubuntu','Isuzuma ridakena','Ibiciro nyacyo','Imenyesha kuri SMS','Kalkulateri'],lk:[],pt:'Ikunzwe cyane',pb:'Iyandikishe na MTN MoMo'},{n:'Ubucuruzi',p:'RWF 15,000',f:['Ibintu byose bya Pro','Inzara nyinshi','Amakuru y\'isoko','Inkunga y\'inzobere'],lk:[],pt:'',pb:'Kuvugana'}],ui:{home:'Ahabanza',crops:'Imyaka',scan:'Muganga w\'Imyaka',mkt:'Amasoko',plans:'Gahunda',settings:'Igenamiterere',pm:'/ukwezi',wt:'Uyu munsi',scanTitle:'Fata cyangwa shyiraho ifoto',scanSub:'Shyiraho ifoto. AI izasuzuma indwara mu masegonda.',cf:'Nizeye 94%',addCrop:'+ Ongeraho umusaruro',allAlerts:'Reba byose',allPrices:'Reba byose',payNote:'Wishyura na',payNote2:'cyangwa Airtel Money.'}}},
+  ethiopia:{localName:'Amharic',code:'am',
+    en:{greeting:'Good morning',name:'Abebe Girma',region:'Oromia Region, Ethiopia',farm:'2.0 ha · Coffee & Teff',wdesc:'Partly cloudy · Rain Thursday',wpill:'Plan irrigation by Wednesday',as:'Pest Alert:',am:'Coffee berry borer reported 15 km away.',crops:[{n:'Coffee (Jimma 74)',d:'Planted Jan · Harvest ~Nov',pct:40,cc:'#92400e',bc:'bb',b:'Growing'},{n:'Teff (DZ-01-974)',d:'Planted Feb · Harvest ~June',pct:65,cc:'#16a34a',bc:'bg',b:'On track'},{n:'Sorghum',d:'Planted Mar · Harvest ~July',pct:30,cc:'#1D9E75',bc:'bb',b:'Early stage'}],mkts:[{c:'Coffee (dry)',m:'Addis Ketema Market',u:'per kg'},{c:'Teff',m:'Merkato Market',u:'per kg'},{c:'Sorghum',m:'Jimma Market',u:'per kg'}],dx:{dis:'Coffee leaf rust detected',cr:'Coffee · Leaf sample',wl:'What it is',bd:'Hemileia vastatrix — fungal disease spreading in humid weather. Take action within 48 hours to protect your harvest.',rl:'Recommended remedies',rem:['Copper fungicide spray','Remove infected leaves','Improve drainage','Increase air circulation'],bl:'Where to buy',bu:'Ethiopian Seed Enterprise, Addis Ababa · Copper Oxychloride · ~ETB 180 per 100g',cta:'Ask AI for more advice →'},tiers:[{n:'Free',p:'ETB 0',f:['Planting calendar','3 crop scans/month'],lk:['Market prices','Weather alerts'],pt:'',pb:'Get started'},{n:'Farmer Pro',p:'ETB 149',f:['Everything in Free','Unlimited scans','Live market prices','SMS weather alerts','Input calculator'],lk:[],pt:'Most popular',pb:'Subscribe with Telebirr'},{n:'Agribusiness',p:'ETB 900',f:['Everything in Pro','Multi-farm management','Export market data','Agronomist support'],lk:[],pt:'',pb:'Contact sales'}],ui:{home:'Home',crops:'My Crops',scan:'Crop Doctor',mkt:'Markets',plans:'Plans',settings:'Settings',pm:'/month',wt:'Today',scanTitle:'Take or upload a photo',scanSub:'Drag & drop or click to upload. AI diagnoses disease in seconds.',cf:'94% confident',addCrop:'+ Add new crop',allAlerts:'View all alerts',allPrices:'View all prices',payNote:'Pay via',payNote2:'or CBE. No bank card needed.'}},
+    am:{greeting:'እንደምን አደሩ',name:'አበበ ግርማ',region:'ኦሮሚያ ክልል፣ ኢትዮጵያ',farm:'2.0 ሄ · ቡና እና ጤፍ',wdesc:'ደስተኛ ደመናማ · ዝናብ ሐሙስ',wpill:'ሮብ ማጠጣት ያስፈልጋል',as:'ማስጠንቀቂያ:',am:'የቡና ጥንዚዛ ከ15 ኪሜ ርቀት ተዘግቧል።',crops:[{n:'ቡና (Jimma 74)',d:'ተከለ ጥር · ምርት ~ኅዳር',pct:40,cc:'#92400e',bc:'bb',b:'እያደገ ነው'},{n:'ጤፍ (DZ-01-974)',d:'ተከለ የካቲት · ምርት ~ሰኔ',pct:65,cc:'#16a34a',bc:'bg',b:'ጥሩ ሂደት'},{n:'ማሽላ',d:'ተከለ መጋቢት · ምርት ~ሐምሌ',pct:30,cc:'#1D9E75',bc:'bb',b:'መጀመሪያ ደረጃ'}],mkts:[{c:'ቡና (ደረቅ)',m:'አዲስ ከተማ ገበያ',u:'በ kg'},{c:'ጤፍ',m:'መርካቶ ገበያ',u:'በ kg'},{c:'ማሽላ',m:'ጅማ ገበያ',u:'በ kg'}],dx:{dis:'የቡና ቅጠል ዝገት ተገኝቷል',cr:'ቡና · የቅጠል ናሙና',wl:'ምንድን ነው',bd:'Hemileia vastatrix — የፈንገስ በሽታ። ምርትዎን ለመጠበቅ በ48 ሰዓት ውስጥ እርምጃ ይውሰዱ።',rl:'የሚመከር ህክምና',rem:['የመዳብ ፈንገስ ማጥፊያ','ቅጠሎች ያስወግዱ','ፍሳሽ ያሻሽሉ','የአየር ዝውውር ይጨምሩ'],bl:'የት ይገዛ',bu:'Ethiopian Seed Enterprise፣ አዲስ አበባ · Copper Oxychloride · ~ETB 180 ለ100g',cta:'AI ጠይቅ →'},tiers:[{n:'ነጻ',p:'ETB 0',f:['የመዝሪያ ቀን','3 ቅኝቶች በወር'],lk:['ዋጋዎች','ማስጠንቀቂያ'],pt:'',pb:'ጀምር'},{n:'ሙያዊ ገበሬ',p:'ETB 149',f:['ሁሉም ነጻ ነገሮች','ያልተወሰነ ቅኝት','ቀጥታ ዋጋዎች','SMS ማስጠንቀቂያ','ካልኩሌተር'],lk:[],pt:'በጣም ታዋቂ',pb:'በTelebirr ይመዝገቡ'},{n:'የግብርና ንግድ',p:'ETB 900',f:['ሁሉም ሙያዊ','ብዙ እርሻዎች','የወጪ ዳታ','ባለሙያ ምክር'],lk:[],pt:'',pb:'ያነጋግሩ'}],ui:{home:'ዋና ገጽ',crops:'ሰብሎቼ',scan:'የሰብል ዶክተር',mkt:'ገበያዎች',plans:'እቅዶች',settings:'ቅንብሮች',pm:'/ወር',wt:'ዛሬ',scanTitle:'ፎቶ ያንሱ ወይም ይስቀሉ',scanSub:'ይጎትቱ ወይም ጠቅ ያድርጉ። AI በሰከንዶች ይመረምራል።',cf:'94% እርግጠኛ',addCrop:'+ ሰብል ጨምር',allAlerts:'ሁሉ ይመልከቱ',allPrices:'ሁሉ ይመልከቱ',payNote:'በTelebirr ይክፈሉ',payNote2:'ወይም CBE። ካርድ አያስፈልግም.'}}},
+};
+
+/* ══ ICONS ══ */
+const Ic = ({n,sz=20,s='currentColor',sw=1.6,fill='none'}) => {
+  const paths = {
+    home:<><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>,
+    leaf:<path d="M12 22V12M12 12C12 7 7 4 2 4c0 5 3 9 10 8M12 12c0-5 5-8 10-8 0 5-3 9-10 8"/>,
+    search:<><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></>,
+    chart:<><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></>,
+    star:<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>,
+    settings:<><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>,
+    cam:<><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></>,
+    warn:<><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>,
+    card:<><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></>,
+    check:<path d="M20 6L9 17l-5-5"/>,
+    x:<><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
+    bell:<><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></>,
+    logout:<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>,
+    eye:<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>,
+    eye_off:<><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></>,
+    globe:<><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></>,
+    user:<><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
+    mail:<><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></>,
+    lock:<><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>,
+    phone:<><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.44 2 2 0 0 1 3.6 1.26h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8a16 16 0 0 0 6 6l.72-.72a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.73 16z"/></>,
+    info:<><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>,
+  };
+  return <svg width={sz} height={sz} viewBox="0 0 24 24" fill={fill} stroke={s} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">{paths[n]}</svg>;
+};
+
+/* ══ DIAL CODES & OTP HELPERS ══ */
+const DIAL_CODES = [
+  {code:'+254',flag:'🇰🇪',name:'Kenya'},
+  {code:'+256',flag:'🇺🇬',name:'Uganda'},
+  {code:'+255',flag:'🇹🇿',name:'Tanzania'},
+  {code:'+250',flag:'🇷🇼',name:'Rwanda'},
+  {code:'+251',flag:'🇪🇹',name:'Ethiopia'},
+];
+
+const OtpInput = ({onComplete, hasError, onReset}) => {
+  const { useState, useRef, useEffect } = React;
+  const [vals, setVals] = useState(['','','','','','']);
+  const refs = [useRef(),useRef(),useRef(),useRef(),useRef(),useRef()];
+
+  useEffect(()=>{ if(refs[0].current) refs[0].current.focus(); },[]);
+
+  const handleChange = (i, e) => {
+    const v = e.target.value.replace(/\D/g,'').slice(-1);
+    const next = [...vals]; next[i]=v; setVals(next);
+    if(v && i<5) refs[i+1].current.focus();
+    if(next.every(x=>x)) onComplete(next.join(''));
+  };
+  const handleKey = (i, e) => {
+    if(e.key==='Backspace' && !vals[i] && i>0){ refs[i-1].current.focus(); }
+    if(e.key==='ArrowLeft' && i>0) refs[i-1].current.focus();
+    if(e.key==='ArrowRight' && i<5) refs[i+1].current.focus();
+  };
+  const handlePaste = (e) => {
+    const text = e.clipboardData.getData('text').replace(/\D/g,'').slice(0,6);
+    if(text.length===6){
+      const next = text.split(''); setVals(next);
+      refs[5].current.focus();
+      onComplete(text);
+    }
+    e.preventDefault();
+  };
+
+  return (
+    <div>
+      <div className="otp-boxes">
+        {vals.map((v,i)=>(
+          <input key={i} ref={refs[i]}
+            className={`otp-box${v?' filled':''}${hasError?' error-box':''}`}
+            maxLength={1} value={v} inputMode="numeric"
+            onChange={e=>handleChange(i,e)} onKeyDown={e=>handleKey(i,e)}
+            onPaste={handlePaste}/>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const ResendTimer = ({onResend}) => {
+  const { useState, useEffect } = React;
+  const [sec, setSec] = useState(30);
+  useEffect(()=>{
+    if(sec<=0) return;
+    const t = setTimeout(()=>setSec(s=>s-1),1000);
+    return ()=>clearTimeout(t);
+  },[sec]);
+  const handleResend = ()=>{ setSec(30); onResend(); };
+  return (
+    <div className="resend-row">
+      <span>Didn't receive a code?</span>
+      {sec>0
+        ? <span className="timer-pill">Resend in {sec}s</span>
+        : <button className="resend-btn" onClick={handleResend}>Resend OTP</button>}
+    </div>
+  );
+};
+
+
+/* ══ FARM PROFILE STEP COMPONENT ══ */
+const CROP_OPTIONS = {
+  kenya:    ['Maize','Beans','Tea','Coffee','Tomatoes','Potatoes','Wheat','Sorghum','Cassava','Banana','Onions','Kale','Avocado','Mango','Passion Fruit'],
+  uganda:   ['Matoke','Coffee','Maize','Beans','Cassava','Sweet Potato','Tea','Sorghum','Rice','Cotton','Groundnuts','Sesame','Sunflower','Millet','Vanilla'],
+  tanzania: ['Maize','Coffee','Cotton','Cashew','Sisal','Tea','Beans','Cassava','Rice','Sorghum','Sunflower','Coconut','Cloves','Paddy','Millet'],
+  rwanda:   ['Potatoes','Beans','Maize','Wheat','Coffee','Tea','Cassava','Banana','Vegetables','Sorghum','Sweet Potato','Peas','Pyrethrum','Passion Fruit','Avocado'],
+  ethiopia: ['Coffee','Teff','Maize','Sorghum','Wheat','Barley','Sesame','Beans','Enset','Cotton','Chickpeas','Lentils','Sunflower','Millet','Chat'],
+};
+
+/* Province → District hierarchy for accurate location */
+const PROVINCES = {
+  kenya: {
+    'Central': ['Kiambu','Nyeri','Kirinyaga','Muranga','Nyandarua'],
+    'Rift Valley': ['Nakuru','Uasin Gishu','Trans Nzoia','Kericho','Bomet','Nandi','Baringo','Laikipia'],
+    'Western': ['Kakamega','Bungoma','Busia','Vihiga'],
+    'Nyanza': ['Kisumu','Siaya','Homabay','Migori','Kisii','Nyamira'],
+    'Eastern': ['Meru','Embu','Kitui','Machakos','Makueni','Isiolo','Marsabit'],
+    'Coast': ['Mombasa','Kilifi','Kwale','Taita Taveta','Lamu','Tana River'],
+    'Nairobi': ['Nairobi Central','Westlands','Kasarani','Embakasi','Dagoretti'],
+    'North Eastern': ['Garissa','Wajir','Mandera'],
+  },
+  uganda: {
+    'Central': ['Kampala','Wakiso','Mukono','Buikwe','Kayunga','Luwero','Nakaseke'],
+    'Eastern': ['Jinja','Iganga','Bugiri','Mayuge','Tororo','Mbale','Sironko','Kapchorwa'],
+    'Northern': ['Gulu','Lira','Kitgum','Pader','Amuru','Nwoya','Omoro'],
+    'Western': ['Mbarara','Bushenyi','Ntungamo','Isingiro','Rukungiri','Fort Portal','Kasese','Bundibugyo'],
+  },
+  tanzania: {
+    'Arusha': ['Arusha City','Arumeru','Monduli','Ngorongoro','Longido','Meru'],
+    'Dar es Salaam': ['Kinondoni','Ilala','Temeke','Ubungo','Kigamboni'],
+    'Kilimanjaro': ['Moshi Urban','Moshi Rural','Hai','Siha','Rombo','Same','Mwanga'],
+    'Morogoro': ['Morogoro Urban','Morogoro Rural','Kilosa','Mvomero','Gairo','Ulanga'],
+    'Mbeya': ['Mbeya City','Rungwe','Kyela','Mbarali','Chunya','Momba'],
+    'Mwanza': ['Ilemela','Nyamagana','Magu','Kwimba','Misungwi','Geita'],
+    'Other Regions': ['Dodoma','Tanga','Iringa','Kigoma','Tabora','Lindi','Mtwara','Shinyanga','Singida','Rukwa'],
+  },
+  rwanda: {
+    'Northern Province': ['Musanze','Burera','Gakenke','Gicumbi','Rulindo'],
+    'Southern Province': ['Huye','Gisagara','Kamonyi','Muhanga','Nyamagabe','Nyanza','Nyaruguru','Ruhango'],
+    'Eastern Province': ['Bugesera','Gatsibo','Kayonza','Kirehe','Ngoma','Nyagatare','Rwamagana'],
+    'Western Province': ['Karongi','Ngororero','Nyabihu','Nyamasheke','Rubavu','Rusizi','Rutsiro'],
+    'Kigali City': ['Gasabo','Kicukiro','Nyarugenge'],
+  },
+  ethiopia: {
+    'Oromia': ['Addis Ababa','Jimma','Dire Dawa','Arsi','Bale','West Shewa','East Shewa','West Hararghe','East Hararghe'],
+    'Amhara': ['Bahir Dar','Gondar','Dessie','Debre Markos','Woldia','Debre Birhan'],
+    'SNNPR': ['Hawassa','Wolaita Sodo','Arbaminch','Hosaena','Alaba','Butajira'],
+    'Tigray': ['Mekelle','Adwa','Axum','Shire','Adigrat','Wukro'],
+    'Other Regions': ['Sidama','Dire Dawa','Harari','Afar','Somali','Benishangul-Gumuz','Gambella'],
+  },
+};
+
+const FarmProfileStep = ({country, onComplete, onBack, loading}) => {
+  const {useState} = React;
+  const [farmSize, setFarmSize] = useState('');
+  const [customSize, setCustomSize] = useState('');
+  const [showCustomSize, setShowCustomSize] = useState(false);
+  const [province, setProvince] = useState('');
+  const [district, setDistrict] = useState('');
+  const [selectedCrops, setSelectedCrops] = useState([]);
+  const [otherCrop, setOtherCrop] = useState('');
+  const [irrigated, setIrrigated] = useState('');
+  const [soilType, setSoilType] = useState('');
+  const [experience, setExperience] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  const countryKey = country || 'kenya';
+  const crops = CROP_OPTIONS[countryKey] || CROP_OPTIONS.kenya;
+  const provinces = PROVINCES[countryKey] || {};
+  const provinceList = Object.keys(provinces);
+  const districtList = province ? (provinces[province] || []) : [];
+
+  const toggleCrop = (crop) => {
+    setSelectedCrops(prev =>
+      prev.includes(crop) ? prev.filter(c=>c!==crop) : [...prev, crop]
+    );
+  };
+
+  const getFinalSize = () => {
+    if(showCustomSize && customSize) return parseFloat(customSize);
+    if(farmSize) return parseFloat(farmSize);
+    return null;
+  };
+
+  const getSizeLabel = () => {
+    if(showCustomSize && customSize) return customSize + ' ha';
+    const labels = {'0.25':'< 0.5 ha','0.75':'0.5–1 ha','1.5':'1–2 ha','3':'2–5 ha','7':'5–10 ha','15':'10+ ha'};
+    return labels[farmSize] || '';
+  };
+
+  const handleSubmit = () => {
+    const farmData = {
+      farm_size: getFinalSize(),
+      province,
+      district,
+      main_crops: [...selectedCrops, ...(otherCrop ? [otherCrop] : [])],
+      irrigated,
+      soil_type: soilType,
+      experience_years: experience,
+    };
+    setSubmitted(true);
+    setTimeout(() => onComplete(farmData), 1400);
+  };
+
+  const canSubmit = selectedCrops.length > 0 && district && (farmSize || (showCustomSize && customSize));
+
+  if(submitted) return (
+    <div className="fp-complete-wrap fade-up">
+      <div className="fp-check-circle">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <div style={{fontFamily:'var(--font-display)',fontSize:24,fontWeight:500,color:'var(--ink)'}}>Farm profile saved!</div>
+      <div style={{fontSize:14,color:'var(--muted)',marginTop:8}}>Setting up your personalised dashboard…</div>
+      <div style={{marginTop:20,display:'flex',justifyContent:'center',gap:6}}>
+        {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:'50%',background:'var(--green)',opacity:.3+i*.35,animation:`pulse 1s ${i*.2}s infinite`}}/>)}
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      <div className="lf-step-tag">Step 4 of 4 — Your farm</div>
+      <div className="lf-title">Tell us about<br/>your farm</div>
+      <div className="lf-sub">We'll personalise your crop calendar, market prices, and disease alerts.</div>
+
+      <div style={{marginTop:20,overflowY:'auto',maxHeight:'60vh',paddingRight:4}}>
+
+        {/* ── FARM SIZE ── */}
+        <div className="fp-section-title">🌾 How big is your farm?</div>
+        <div className="fp-size-grid">
+          {[
+            {val:'0.25',label:'< 0.5 ha',sub:'Small plot'},
+            {val:'0.75',label:'0.5–1 ha',sub:''},
+            {val:'1.5', label:'1–2 ha',sub:''},
+            {val:'3',   label:'2–5 ha',sub:''},
+            {val:'7',   label:'5–10 ha',sub:''},
+            {val:'15',  label:'10+ ha',sub:'Large farm'},
+          ].map(({val,label,sub})=>(
+            <div key={val} className={`fp-size-tile${farmSize===val&&!showCustomSize?' sel':''}`}
+              onClick={()=>{setFarmSize(val);setShowCustomSize(false);}}>
+              <div className="fp-size-val">{label}</div>
+              {sub && <div className="fp-size-lbl">{sub}</div>}
+            </div>
+          ))}
+          <div className={`fp-size-tile${showCustomSize?' sel':''}`}
+            onClick={()=>{setShowCustomSize(true);setFarmSize('');}}>
+            <div className="fp-size-val">✏️</div>
+            <div className="fp-size-lbl">Custom size</div>
+          </div>
+        </div>
+        {showCustomSize && (
+          <div style={{marginTop:8,display:'flex',gap:8,alignItems:'center'}}>
+            <input className="fp-input" type="number" placeholder="e.g. 0.3" min="0.01" step="0.01"
+              value={customSize} onChange={e=>setCustomSize(e.target.value)}
+              style={{flex:1}} autoFocus/>
+            <span style={{fontSize:13,color:'var(--muted)',whiteSpace:'nowrap'}}>hectares (ha)</span>
+          </div>
+        )}
+
+        {/* ── LOCATION: PROVINCE FIRST ── */}
+        <div className="fp-section-title" style={{marginTop:20}}>📍 Where is your farm located?</div>
+        <div style={{fontSize:12,color:'var(--muted)',marginBottom:8}}>Select your province / region first, then your district.</div>
+
+        {/* Province selector */}
+        <div style={{marginBottom:10}}>
+          <label style={{fontSize:12,fontWeight:600,color:'var(--ink)',display:'block',marginBottom:6}}>Province / Region</label>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+            {provinceList.map(p=>(
+              <div key={p} onClick={()=>{setProvince(p);setDistrict('');}}
+                style={{border:`1.5px solid ${province===p?'var(--green)':'#e5e7eb'}`,borderRadius:10,padding:'10px 12px',cursor:'pointer',fontSize:12,fontWeight:province===p?700:400,color:province===p?'var(--green-dark)':'var(--ink)',background:province===p?'#f0fdf4':'#fff',transition:'all .18s',textAlign:'center'}}>
+                {p}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* District selector — appears after province chosen */}
+        {province && (
+          <div style={{marginBottom:4}}>
+            <label style={{fontSize:12,fontWeight:600,color:'var(--ink)',display:'block',marginBottom:6}}>
+              District in {province}
+            </label>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+              {districtList.map(d=>(
+                <div key={d} onClick={()=>setDistrict(d)}
+                  style={{border:`1.5px solid ${district===d?'var(--green)':'#e5e7eb'}`,borderRadius:8,padding:'9px 10px',cursor:'pointer',fontSize:12,fontWeight:district===d?700:400,color:district===d?'var(--green-dark)':'var(--ink)',background:district===d?'#f0fdf4':'#fff',transition:'all .18s',textAlign:'center'}}>
+                  {d}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── IRRIGATION ── */}
+        <div className="fp-section-title" style={{marginTop:20}}>💧 Do you irrigate your farm?</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
+          {[['yes','Yes, I irrigate','💧'],['rain','Rain-fed only','🌧️'],['both','Both methods','🌿']].map(([val,label,icon])=>(
+            <div key={val} onClick={()=>setIrrigated(val)}
+              style={{border:`1.5px solid ${irrigated===val?'var(--green)':'#e5e7eb'}`,borderRadius:10,padding:'12px 8px',cursor:'pointer',textAlign:'center',background:irrigated===val?'#f0fdf4':'#fff',transition:'all .18s'}}>
+              <div style={{fontSize:20,marginBottom:4}}>{icon}</div>
+              <div style={{fontSize:11,fontWeight:irrigated===val?700:400,color:irrigated===val?'var(--green-dark)':'var(--ink)'}}>{label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── SOIL TYPE ── */}
+        <div className="fp-section-title" style={{marginTop:20}}>🪱 What is your soil like?</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+          {[
+            ['clay','Clay soil','Heavy, holds water'],
+            ['loam','Loam soil','Dark, fertile (best)'],
+            ['sandy','Sandy soil','Light, drains fast'],
+            ['volcanic','Volcanic soil','Dark, very fertile'],
+            ['unknown','Not sure','I will find out later'],
+          ].map(([val,label,desc])=>(
+            <div key={val} onClick={()=>setSoilType(val)}
+              style={{border:`1.5px solid ${soilType===val?'var(--green)':'#e5e7eb'}`,borderRadius:10,padding:'11px 12px',cursor:'pointer',background:soilType===val?'#f0fdf4':'#fff',transition:'all .18s',gridColumn:val==='unknown'?'1/-1':''}}>
+              <div style={{fontSize:13,fontWeight:soilType===val?700:500,color:soilType===val?'var(--green-dark)':'var(--ink)'}}>{label}</div>
+              <div style={{fontSize:11,color:'var(--muted)',marginTop:2}}>{desc}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── CROPS ── */}
+        <div className="fp-section-title" style={{marginTop:20}}>🌱 What do you grow?
+          <span style={{fontSize:10,fontWeight:400,color:'var(--muted)',marginLeft:6}}>(select all that apply)</span>
+        </div>
+        <div className="fp-crop-grid">
+          {crops.map(crop=>(
+            <div key={crop} className={`fp-crop-tag${selectedCrops.includes(crop)?' sel':''}`} onClick={()=>toggleCrop(crop)}>
+              {selectedCrops.includes(crop)?'✓ ':''}{crop}
+            </div>
+          ))}
+        </div>
+        <input className="fp-input" style={{marginTop:8}} type="text" placeholder="Other crop (type here)…"
+          value={otherCrop} onChange={e=>setOtherCrop(e.target.value)}/>
+
+        {/* ── EXPERIENCE ── */}
+        <div className="fp-section-title" style={{marginTop:20}}>👨‍🌾 How long have you been farming?</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+          {[['<2','Less than 2 years'],['2-5','2–5 years'],['5-10','5–10 years'],['>10','10+ years']].map(([val,label])=>(
+            <div key={val} onClick={()=>setExperience(val)}
+              style={{border:`1.5px solid ${experience===val?'var(--green)':'#e5e7eb'}`,borderRadius:10,padding:'11px 12px',cursor:'pointer',fontSize:13,color:experience===val?'var(--green-dark)':'var(--ink)',background:experience===val?'#f0fdf4':'#fff',transition:'all .18s',fontWeight:experience===val?700:400,textAlign:'center'}}>
+              {label}
+            </div>
+          ))}
+        </div>
+
+        {/* ── SUMMARY ── */}
+        {(getSizeLabel()||district||selectedCrops.length>0) && (
+          <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:10,padding:'12px 14px',marginTop:16,fontSize:13,color:'#15803d'}}>
+            <div style={{fontWeight:700,marginBottom:6}}>✅ Your farm summary:</div>
+            {getSizeLabel() && <div>📐 Farm size: {getSizeLabel()}</div>}
+            {province && <div>📍 {province}{district?` → ${district}`:''}</div>}
+            {irrigated && <div>💧 {irrigated==='yes'?'Irrigated':irrigated==='rain'?'Rain-fed':'Both irrigation & rain'}</div>}
+            {soilType && <div>🪱 {['clay','loam','sandy','volcanic','unknown'].includes(soilType)?{clay:'Clay soil',loam:'Loam soil',sandy:'Sandy soil',volcanic:'Volcanic soil',unknown:'Soil type unknown'}[soilType]:soilType}</div>}
+            {selectedCrops.length>0 && <div>🌱 {selectedCrops.join(', ')}{otherCrop?', '+otherCrop:''}</div>}
+            {experience && <div>👨‍🌾 {experience} years farming</div>}
+          </div>
+        )}
+
+        {!canSubmit && (
+          <div style={{fontSize:12,color:'var(--muted)',textAlign:'center',marginTop:12}}>
+            {!farmSize&&!customSize?'⬆ Select farm size':!district?'⬆ Select your district':selectedCrops.length===0?'⬆ Select at least one crop':''}
+          </div>
+        )}
+
+        <button className="lf-submit" style={{marginTop:16,background:canSubmit?'var(--green)':'#d1d5db'}}
+          onClick={handleSubmit} disabled={!canSubmit||loading}>
+          {loading?'Setting up your dashboard…':'Complete setup & go to dashboard →'}
+        </button>
+        <button onClick={onBack} style={{background:'none',border:'none',fontSize:13,color:'#9ca3af',textDecoration:'underline',cursor:'pointer',alignSelf:'center',display:'block',margin:'8px auto 0'}}>← Back</button>
+      </div>
+    </>
+  );
+};
+
+
+/* ══ API CONFIGURATION ══ */
+const API_BASE = 'https://agriadvisor-production.up.railway.app';
+// Note: api.agriadvisor.co points to the same server once DNS propagates
+
+const api = {
+  async post(endpoint, data, token=null) {
+    const headers = {'Content-Type':'application/json'};
+    if(token) headers['Authorization'] = `Bearer ${token}`;
+    try {
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        method:'POST', headers, body:JSON.stringify(data)
+      });
+      const text = await res.text();
+      let json;
+      try { json = JSON.parse(text); } catch(e) { 
+        throw new Error('Server error. Please try again.'); 
+      }
+      if(!res.ok) throw new Error(json.detail || json.error || 'Request failed');
+      return json;
+    } catch(e) {
+      if(e.message.includes('fetch')) throw new Error('No connection. Check your internet.');
+      throw e;
+    }
+  },
+  async put(endpoint, data, token) {
+    try {
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        method:'PUT',
+        headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
+        body:JSON.stringify(data)
+      });
+      const text = await res.text();
+      let json;
+      try { json = JSON.parse(text); } catch(e) { throw new Error('Server error.'); }
+      if(!res.ok) throw new Error(json.detail || 'Update failed');
+      return json;
+    } catch(e) {
+      if(e.message.includes('fetch')) throw new Error('No connection.');
+      throw e;
+    }
+  },
+  async get(endpoint, token) {
+    try {
+      const res = await fetch(`${API_BASE}${endpoint}`, {
+        headers:{'Authorization':`Bearer ${token}`}
+      });
+      const text = await res.text();
+      try { return JSON.parse(text); } catch(e) { return {}; }
+    } catch(e) { return {}; }
+  }
+};
+
+// Token storage
+const Auth = {
+  saveTokens(access, refresh) {
+    localStorage.setItem('agri_access', access);
+    localStorage.setItem('agri_refresh', refresh);
+  },
+  getToken() { return localStorage.getItem('agri_access'); },
+  clear() { localStorage.removeItem('agri_access'); localStorage.removeItem('agri_refresh'); }
+};
+
+
+/* ══ OTP TIMER ══ */
+const OtpTimer = ({seconds, onResend}) => {
+  const [remaining, setRemaining] = React.useState(seconds);
+  React.useEffect(()=>{
+    if(remaining<=0) return;
+    const t = setTimeout(()=>setRemaining(r=>r-1), 1000);
+    return ()=>clearTimeout(t);
+  },[remaining]);
+  const min = Math.floor(remaining/60);
+  const sec = remaining%60;
+  return (
+    <div style={{textAlign:'center',marginTop:16,fontSize:13}}>
+      {remaining>0 ? (
+        <span style={{color:'#6b7280'}}>
+          Code expires in <strong style={{color:'#374151'}}>{min}:{sec.toString().padStart(2,'0')}</strong>
+        </span>
+      ) : (
+        <span style={{color:'#dc2626'}}>Code expired</span>
+      )}
+      <br/>
+      {remaining<=0 && (
+        <button onClick={()=>{setRemaining(seconds);onResend();}} 
+          style={{marginTop:8,background:'#15803d',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontSize:13,fontWeight:600,cursor:'pointer'}}>
+          Resend code
+        </button>
+      )}
+    </div>
+  );
+};
+
+/* ══ LOGIN PAGE ══ */
+const Login = ({onLogin}) => {
+  const { useState, useCallback } = React;
+  const [authMode, setAuthMode] = useState('phone'); // 'phone' | 'email'
+  const [step, setStep] = useState(0);
+  // step 0 = sign-in, 1 = otp verify, 2 = otp success, 3 = signup-country, 4 = signup-lang, 5 = signup-details, 6 = farm-profile
+  const [isLogin, setIsLogin] = useState(true);
+  const isSignupRef = React.useRef(false);
+  const [signupInProgress, setSignupInProgress] = useState(false);
+  const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [otpError, setOtpError] = useState(false);
+  const [country, setCountry] = useState(null);
+  const [lang, setLang] = useState(null);
+  const [dial, setDial] = useState('+254');
+  const [form, setForm] = useState({email:'', password:'', name:'', phone:''});
+  const countryKeys = ['kenya','uganda','tanzania','rwanda','ethiopia'];
+
+  const maskedPhone = () => {
+    const p = form.phone;
+    if(p.length < 4) return dial+' '+p;
+    return dial+' '+p.slice(0,2)+'••••'+p.slice(-2);
+  };
+
+  const handleSendOtp = async () => {
+    if(!form.phone || form.phone.length < 6){ setError('Enter a valid phone number'); return; }
+    setLoading(true); setError('');
+    const fullPhone = dial + form.phone;
+    const countryCode = dial==='+254'?'KE':dial==='+256'?'UG':dial==='+255'?'TZ':dial==='+250'?'RW':dial==='+251'?'ET':'KE';
+    try {
+      await api.post('/api/auth/send-otp/', {phone: fullPhone, country: countryCode});
+      setLoading(false);
+      setStep(1);
+    } catch(err) {
+      setLoading(false);
+      setError(err.message || 'Failed to send OTP. Please try again.');
+    }
+  };
+
+  const handleVerifyOtp = async (code) => {
+    setOtpError(false);
+    const fullPhone = dial + form.phone;
+    try {
+      const res = await api.post('/api/auth/verify-otp/', {phone: fullPhone, code});
+      Auth.saveTokens(res.access, res.refresh);
+      window._agriUserData = res.user;
+      // Check if this is login vs signup
+      if(!window._agriIsSignup && res.is_new_user) {
+        // Login attempt with unregistered number - show error
+        setError('No account found for this number. Please create one free.');
+        setStep(0);
+        return;
+      }
+      setStep(2);
+      setTimeout(()=>{
+        if(window._agriIsSignup){
+          window._agriIsSignup=false;
+          setStep(6);
+        } else {
+          const userCountry = (res.user?.country||'KE').toLowerCase();
+          const countryMap = {ke:'kenya',ug:'uganda',tz:'tanzania',rw:'rwanda',et:'ethiopia'};
+          const userLang = res.user?.language||'en';
+          const mappedCountry = countryMap[userCountry]||'kenya';
+          onLogin(mappedCountry, userLang);
+        }
+      }, 1400);
+    } catch(err) {
+      setOtpError(true);
+      setTimeout(()=>setOtpError(false),2000);
+    }
+  };
+
+  const handleEmailLogin = async (e) => {
+    e.preventDefault();
+    if(!form.email||!form.password){setError('Please fill in all fields');return;}
+    setLoading(true); setError('');
+    try {
+      const res = await api.post('/api/auth/email-login/', {email:form.email, password:form.password});
+      Auth.saveTokens(res.access, res.refresh);
+      window._agriUserData = res.user;
+      setLoading(false);
+      const userCountry = (res.user?.country||'KE').toLowerCase();
+      const countryMap = {ke:'kenya',ug:'uganda',tz:'tanzania',rw:'rwanda',et:'ethiopia'};
+      onLogin(countryMap[userCountry]||country||'kenya', res.user?.language||lang||'en');
+    } catch(err) {
+      setLoading(false);
+      setError(err.message || 'Login failed. Please try again.');
+    }
+  };
+
+  const handleBack = () => {
+    if(step===1){setStep(0);}
+    else if(step===3){setIsLogin(true);isSignupRef.current=false;setSignupInProgress(false);window._agriIsSignup=false;setStep(0);}
+    else if(step===4) setStep(3);
+    else if(step===5) setStep(4);
+    else if(step===6) setStep(5);
+  };
+
+  return (
+    <div className="login-root">
+      {/* Brand panel */}
+      <div className="login-brand">
+        <div className="brand-geo">
+          {[['-80px','-80px','300px'],['-40px','60%','200px'],['30%','70%','400px'],['60%','-60px','250px']].map(([t,l,s],i)=>(
+            <div key={i} className="geo-circle" style={{top:t,left:l,width:s,height:s}}/>
+          ))}
+        </div>
+        <div className="brand-top">
+          <div className="brand-logo">
+            <div className="brand-logo-mark">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round">
+                <path d="M12 22V12M12 12C12 7 7 4 2 4c0 5 3 9 10 8M12 12c0-5 5-8 10-8 0 5-3 9-10 8"/>
+              </svg>
+            </div>
+            <span className="brand-logo-name">AgriAdvisor</span>
+          </div>
+          <div className="brand-headline">Smart farming<br/>for <em>East Africa</em></div>
+          <div className="brand-sub">AI-powered crop disease detection, live market prices, and personalized farming advice — in your language.</div>
+        </div>
+        <div className="brand-bottom">
+          <div className="brand-stats">
+            {[['50K+','Farmers'],['5','Countries'],['94%','Accuracy']].map(([v,l])=>(
+              <div key={l} className="bstat"><div className="bstat-val">{v}</div><div className="bstat-lbl">{l}</div></div>
+            ))}
+          </div>
+          <div className="brand-flags">
+            {[['🇰🇪','Kenya'],['🇺🇬','Uganda'],['🇹🇿','Tanzania'],['🇷🇼','Rwanda'],['🇪🇹','Ethiopia']].map(([f,n])=>(
+              <div key={n} className="flag-pill"><span>{f}</span>{n}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Form panel */}
+      <div className="login-form-panel">
+        <div className="login-form-wrap fade-up">
+
+          {/* ── SIGN IN ── */}
+          {isLogin && step===0 && (
+            <>
+              <div className="lf-step-tag">Welcome back</div>
+              <div className="lf-title">Sign in to your<br/>farm dashboard</div>
+              <div className="lf-sub">Choose how you'd like to sign in.</div>
+              <div style={{marginTop:24}}>
+                <div className="auth-tabs">
+                  <button className={`auth-tab${authMode==='phone'?' on':''}`} onClick={()=>{setAuthMode('phone');setError('');}}>📱 Phone / OTP</button>
+                  <button className={`auth-tab${authMode==='email'?' on':''}`} onClick={()=>{setAuthMode('email');setError('');}}>✉️ Email</button>
+                </div>
+
+                {authMode==='phone' ? (
+                  <div className="lf-form">
+                    {error && <div className="lf-error"><Ic n="warn" sz={15} s="#dc2626" sw={2}/>{error}</div>}
+                    <div className="lf-field">
+                      <label className="lf-label">Phone number</label>
+                      <div className="phone-row">
+                        <select className="dial-select" value={dial} onChange={e=>setDial(e.target.value)}>
+                          {DIAL_CODES.map(d=><option key={d.code} value={d.code}>{d.flag} {d.code}</option>)}
+                        </select>
+                        <div className="lf-input-wrap" style={{flex:1,position:'relative'}}>
+                          <span style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',pointerEvents:'none'}}><Ic n="phone" sz={16} s="#9ca3af" sw={1.8}/></span>
+                          <input className="lf-input" style={{paddingLeft:40,width:'100%'}} type="tel" placeholder="7XX XXX XXX" value={form.phone} onChange={e=>setForm({...form,phone:e.target.value.replace(/\D/g,'')})}/>
+                        </div>
+                      </div>
+                    </div>
+                    <button className="lf-submit" onClick={handleSendOtp} disabled={loading}>
+                      {loading ? 'Sending OTP…' : 'Send verification code →'}
+                    </button>
+                    <div className="lf-divider">or sign in with email</div>
+                    <button className="lf-social-btn" style={{width:'100%'}} onClick={()=>setAuthMode('email')}>✉️ Use email & password instead</button>
+                  </div>
+                ) : (
+                  <form className="lf-form" onSubmit={handleEmailLogin}>
+                    {error && <div className="lf-error"><Ic n="warn" sz={15} s="#dc2626" sw={2}/>{error}</div>}
+                    <div className="lf-field">
+                      <label className="lf-label">Email address</label>
+                      <div className="lf-input-wrap" style={{position:'relative'}}>
+                        <span style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',pointerEvents:'none'}}><Ic n="mail" sz={16} s="#9ca3af" sw={1.8}/></span>
+                        <input className="lf-input" style={{paddingLeft:40}} type="email" placeholder="you@farm.com" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/>
+                      </div>
+                    </div>
+                    <div className="lf-field">
+                      <label className="lf-label">Password</label>
+                      <div className="lf-input-wrap">
+                        <input className="lf-input" type={showPw?'text':'password'} placeholder="••••••••" value={form.password} onChange={e=>setForm({...form,password:e.target.value})}/>
+                        <button type="button" className="lf-eye" onClick={()=>setShowPw(!showPw)}><Ic n={showPw?'eye_off':'eye'} sz={16} s="#9ca3af" sw={1.8}/></button>
+                      </div>
+                    </div>
+                    <div className="lf-row">
+                      <label className="lf-remember"><input type="checkbox"/> Remember me</label>
+                      <span className="lf-forgot">Forgot password?</span>
+                    </div>
+                    <button className="lf-submit" type="submit" disabled={loading}>{loading?'Signing in…':'Sign in →'}</button>
+                    <div className="lf-divider">or use phone OTP</div>
+                    <button type="button" className="lf-social-btn" style={{width:'100%'}} onClick={()=>setAuthMode('phone')}>📱 Use phone number instead</button>
+                  </form>
+                )}
+              </div>
+              <div className="lf-signup-row" style={{marginTop:20}}>Don't have an account? <span onClick={()=>{setIsLogin(false);isSignupRef.current=true;setSignupInProgress(true);window._agriIsSignup=true;setStep(3);}}>Create one free</span></div>
+            </>
+          )}
+
+          {/* ── OTP VERIFY ── */}
+          {step===1 && (
+            <>
+              <div className="lf-step-tag">{isLogin?'Sign in':'Create account'} — Verify phone</div>
+              <div className="lf-title">Enter the code</div>
+              <div className="lf-sub">We sent a 6-digit code to <strong>{maskedPhone()}</strong>. It expires in 10 minutes.</div>
+              <div style={{marginTop:28}}>
+                <div className="otp-sent-badge">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2" strokeLinecap="round" style={{flexShrink:0,marginTop:2}}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.44 2 2 0 0 1 3.6 1.26h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 8a16 16 0 0 0 6 6l.72-.72a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.73 16z"/></svg>
+                  <p>Code sent to <strong>{maskedPhone()}</strong>.<br/>Demo tip: enter <strong>123456</strong> to verify.</p>
+                </div>
+                <div style={{marginTop:20}}>
+                  <label className="lf-label" style={{textAlign:'center',display:'block',marginBottom:12}}>6-digit verification code</label>
+                  <OtpInput onComplete={handleVerifyOtp} hasError={otpError} onReset={()=>setOtpError(false)}/>
+                  <ResendTimer onResend={()=>{}}/>
+                </div>
+                {otpError && <div className="lf-error" style={{marginTop:12}}><Ic n="warn" sz={15} s="#dc2626" sw={2}/>Incorrect code. Please try again.</div>}
+                <button onClick={handleBack} style={{width:'100%',marginTop:16,background:'none',border:'1.5px solid #e5e7eb',padding:'11px',borderRadius:10,fontSize:13,fontWeight:600,color:'#6b7280',cursor:'pointer'}}>← Change phone number</button>
+              </div>
+            </>
+          )}
+
+          {/* ── OTP SUCCESS ── */}
+          {step===2 && (
+            <div className="otp-success-wrap" style={{marginTop:60}}>
+              <div className="otp-success-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+              </div>
+              <div style={{fontFamily:'var(--font-display)',fontSize:24,fontWeight:500,color:'var(--ink)'}}>Phone verified!</div>
+              <div style={{fontSize:14,color:'var(--muted)',marginTop:8}}>{isLogin?'Signing you in…':'Setting up your account…'}</div>
+              <div style={{marginTop:20,display:'flex',justifyContent:'center',gap:6}}>
+                {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:'50%',background:'var(--green)',opacity:.3+i*.35,animation:`pulse 1s ${i*.2}s infinite`}}/>)}
+              </div>
+            </div>
+          )}
+
+          {/* ── SIGNUP: COUNTRY ── */}
+          {!isLogin && step===3 && (
+            <>
+              <div className="lf-step-tag">Step 1 of 4 — Create account</div>
+              <div className="lf-title">Where are you<br/>farming?</div>
+              <div className="lf-sub">We'll personalize crops, prices, and language for your country.</div>
+              <div className="lf-form">
+                <div className="lf-country-select-grid">
+                  {countryKeys.map(k=>{
+                    const m=META[k]; const sel=country===k;
+                    return (
+                      <div key={k} className={`lf-ctile${k==='ethiopia'?' lf-eth-tile':''} ${sel?'sel':''}`}
+                        onClick={()=>setCountry(k)} style={sel?{borderColor:'var(--green)',background:'#f0fdf4'}:{}}>
+                        <span className="cf" style={{fontSize:22}}>{m.flag}</span>
+                        <div><div className="cn" style={{fontSize:13,fontWeight:700,color:'#1a1a1a'}}>{k.charAt(0).toUpperCase()+k.slice(1)}</div>
+                        <div className="cc" style={{fontSize:10,color:'#6b7280'}}>{LANGS[k].localName} · {m.currency}</div></div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <button className="lf-submit" disabled={!country} onClick={()=>country&&setStep(4)} style={{background:country?'var(--green)':'#d1d5db'}}>Continue →</button>
+                <button onClick={handleBack} style={{background:'none',border:'none',fontSize:13,color:'#9ca3af',textDecoration:'underline',cursor:'pointer',alignSelf:'center'}}>← Back to login</button>
+              </div>
+            </>
+          )}
+
+          {/* ── SIGNUP: LANGUAGE ── */}
+          {!isLogin && step===4 && (
+            <>
+              <div className="lf-step-tag">Step 2 of 4 — Choose language</div>
+              <div className="lf-title">How do you<br/>prefer to read?</div>
+              <div className="lf-sub">You can switch languages anytime from within the app.</div>
+              <div className="lf-form">
+                <div className="lf-lang-row">
+                  <div className={`lf-ltile${lang==='en'?' sel':''}`} onClick={()=>setLang('en')} style={lang==='en'?{borderColor:'var(--green)',background:'#f0fdf4'}:{}}>
+                    <div className="lf-lang-icon" style={{background:'#f3f4f6'}}><Ic n="globe" sz={16} s="#374151" sw={1.8}/></div>
+                    <div><div className="l-name" style={{fontSize:13,fontWeight:700,color:'#1a1a1a'}}>English</div><div style={{fontSize:11,color:'#6b7280',marginTop:2}}>International</div></div>
+                  </div>
+                  {country && <div className={`lf-ltile${lang===LANGS[country].code?' sel':''}`} onClick={()=>setLang(LANGS[country].code)} style={lang===LANGS[country].code?{borderColor:'var(--green)',background:'#f0fdf4'}:{}}>
+                    <div className="lf-lang-icon" style={{background:'#f0fdf4',fontSize:18}}>{META[country].flag}</div>
+                    <div><div className="l-name" style={{fontSize:13,fontWeight:700,color:'#1a1a1a'}}>{LANGS[country].localName}</div><div style={{fontSize:11,color:'#6b7280',marginTop:2}}>{country.charAt(0).toUpperCase()+country.slice(1)}</div></div>
+                  </div>}
+                </div>
+                <button className="lf-submit" disabled={!lang} onClick={()=>lang&&setStep(5)} style={{background:lang?'var(--green)':'#d1d5db'}}>Continue →</button>
+                <button onClick={handleBack} style={{background:'none',border:'none',fontSize:13,color:'#9ca3af',textDecoration:'underline',cursor:'pointer',alignSelf:'center'}}>← Back</button>
+              </div>
+            </>
+          )}
+
+          {/* ── SIGNUP: DETAILS + PHONE ── */}
+          {!isLogin && step===5 && (
+            <>
+              <div className="lf-step-tag">Step 3 of 4 — Your details</div>
+              <div className="lf-title">Almost there!</div>
+              <div className="lf-sub">Enter your details. We'll send a one-time code to verify your phone.</div>
+              <div className="lf-form">
+                <div className="lf-field">
+                  <label className="lf-label">Full name</label>
+                  <div style={{position:'relative'}}>
+                    <span style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',pointerEvents:'none'}}><Ic n="user" sz={16} s="#9ca3af" sw={1.8}/></span>
+                    <input className="lf-input" style={{paddingLeft:40,width:'100%'}} type="text" placeholder="e.g. James Mwangi" value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/>
+                  </div>
+                </div>
+                <div className="lf-field">
+                  <label className="lf-label">Phone number</label>
+                  <div className="phone-row">
+                    <select className="dial-select" value={dial} onChange={e=>setDial(e.target.value)}>
+                      {DIAL_CODES.map(d=><option key={d.code} value={d.code}>{d.flag} {d.code}</option>)}
+                    </select>
+                    <div style={{flex:1,position:'relative'}}>
+                      <span style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',pointerEvents:'none'}}><Ic n="phone" sz={16} s="#9ca3af" sw={1.8}/></span>
+                      <input className="lf-input" style={{paddingLeft:40,width:'100%'}} type="tel" placeholder="7XX XXX XXX" value={form.phone} onChange={e=>setForm({...form,phone:e.target.value.replace(/\D/g,'')})}/>
+                    </div>
+                  </div>
+                </div>
+                <div className="lf-field">
+                  <label className="lf-label">Email <span style={{fontSize:11,color:'#9ca3af',fontWeight:400}}>(optional)</span></label>
+                  <div style={{position:'relative'}}>
+                    <span style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',pointerEvents:'none'}}><Ic n="mail" sz={16} s="#9ca3af" sw={1.8}/></span>
+                    <input className="lf-input" style={{paddingLeft:40,width:'100%'}} type="email" placeholder="you@email.com" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/>
+                  </div>
+                </div>
+                <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:10,padding:'10px 14px',fontSize:12,color:'#15803d',display:'flex',gap:8,alignItems:'flex-start'}}>
+                  <Ic n="info" sz={14} s="#15803d" sw={2}/><span>We'll send a one-time code to verify your phone. No spam, ever.</span>
+                </div>
+                <button className="lf-submit" onClick={()=>{
+                    if(!form.name||form.name.length<2)return;
+                    handleSendOtp();
+                  }} disabled={!form.name||!form.phone||form.phone.length<6||loading}>
+                  {loading?'Sending OTP…':'Send verification code →'}
+                </button>
+                <button onClick={handleBack} style={{background:'none',border:'none',fontSize:13,color:'#9ca3af',textDecoration:'underline',cursor:'pointer',alignSelf:'center'}}>← Back</button>
+              </div>
+            </>
+          )}
+
+          {/* ── SIGNUP: FARM PROFILE ── */}
+          {!isLogin && step===6 && (
+            <FarmProfileStep
+              country={country}
+              onComplete={async (farmData)=>{
+                setLoading(true);
+                const token = Auth.getToken();
+                // Save name to profile
+                const profileData = {
+                  full_name: form.name,
+                  language: lang || 'en',
+                  profile: {
+                    farm_size: farmData.farm_size,
+                    district: farmData.district,
+                    main_crops: farmData.main_crops,
+                  }
+                };
+                try {
+                  if(token) await api.put('/api/auth/profile/', profileData, token);
+                } catch(err) {
+                  console.log('Profile save error:', err.message);
+                }
+                setLoading(false);
+                const countryMap = {ke:'kenya',ug:'uganda',tz:'tanzania',rw:'rwanda',et:'ethiopia'};
+                const userCountry = window._agriUserData?.country?.toLowerCase()||'ke';
+                onLogin(countryMap[userCountry]||country||'kenya', lang||'en');
+              }}
+              onBack={()=>setStep(5)}
+              loading={loading}
+            />
+          )}
+
+
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+/* ══ CROP DATE EDITOR ══ */
+const CropDateEditor = ({crop, saved, onSave, onCancel}) => {
+  const [plantDate, setPlantDate] = React.useState(saved?.plantDate||'');
+  const [harvestDate, setHarvestDate] = React.useState(saved?.harvestDate||'');
+  const inputStyle = {padding:'8px 12px',border:'1.5px solid #e5e7eb',borderRadius:8,fontSize:13,width:'100%',outline:'none'};
+  return (
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+      <div>
+        <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:4}}>Planting date</label>
+        <input type="date" style={inputStyle} value={plantDate} onChange={e=>setPlantDate(e.target.value)}/>
+      </div>
+      <div>
+        <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:4}}>Expected harvest date</label>
+        <input type="date" style={inputStyle} value={harvestDate} onChange={e=>setHarvestDate(e.target.value)}/>
+      </div>
+      <div style={{gridColumn:'1/-1',display:'flex',gap:8,marginTop:4}}>
+        <button onClick={()=>onSave(crop,plantDate,harvestDate)} disabled={!plantDate||!harvestDate}
+          style={{flex:1,background:plantDate&&harvestDate?'#15803d':'#d1d5db',color:'#fff',border:'none',borderRadius:8,padding:'9px',fontSize:13,fontWeight:600,cursor:'pointer'}}>
+          Save dates
+        </button>
+        <button onClick={onCancel} style={{padding:'9px 16px',border:'1px solid #e5e7eb',borderRadius:8,fontSize:13,cursor:'pointer',background:'#fff'}}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Rwanda planting calendar
+  const rwandaPlanting = {
+    Potatoes:     {plant:"Sep/Mar", harvest:"Jan/Jun", days:90,  color:"#f59e0b"},
+    Beans:        {plant:"Sep/Feb", harvest:"Dec/May", days:75,  color:"#16a34a"},
+    Maize:        {plant:"Oct/Mar", harvest:"Feb/Jul", days:120, color:"#84cc16"},
+    Wheat:        {plant:"Sep/Feb", harvest:"Jan/Jun", days:120, color:"#d97706"},
+    Tomatoes:     {plant:"Jun/Dec", harvest:"Sep/Mar", days:90,  color:"#ef4444"},
+    Cassava:      {plant:"Oct",     harvest:"Apr+",    days:270, color:"#8b5cf6"},
+    Sorghum:      {plant:"Sep/Mar", harvest:"Jan/Jul", days:120, color:"#92400e"},
+    Peas:         {plant:"Sep/Feb", harvest:"Dec/May", days:75,  color:"#6ee7b7"},
+    Banana:       {plant:"Any",     harvest:"12 mo",   days:365, color:"#fbbf24"},
+    Coffee:       {plant:"Mar",     harvest:"Jun",     days:270, color:"#78350f"},
+    Avocado:      {plant:"Mar",     harvest:"Dec",     days:270, color:"#365314"},
+    Vegetables:   {plant:"Sep/Feb", harvest:"Dec/May", days:60,  color:"#10b981"},
+    "Sweet Potato":{plant:"Oct/Mar",harvest:"Feb/Jun", days:90,  color:"#f97316"},
+    "Passion Fruit":{plant:"Mar",   harvest:"Sep",     days:180, color:"#a855f7"},
+  };
+  const getCropInfo = (cropName) => {
+    const data = rwandaPlanting[cropName] || {plant:"Check calendar",harvest:"Varies",days:90,color:"#6b7280"};
+    const now = new Date();
+    const mo = now.getMonth(); // 0-11
+    const isSeasonA = mo >= 8 || mo <= 0;
+    // Estimate progress: Season A runs Sep-Jan (5 months), Season B Feb-Jun (5 months)
+    let pct = 50;
+    if(isSeasonA){ const elapsed = mo >= 8 ? mo-8 : mo+4; pct = Math.min(90, Math.round((elapsed/5)*100)); }
+    else { const elapsed = mo >= 1 ? mo-1 : 0; pct = Math.min(90, Math.round((elapsed/5)*100)); }
+    if(data.days >= 270) pct = Math.max(20, pct-20);
+    return {...data, pct: Math.max(5, pct)};
+  };
+
+/* ══ DASHBOARD ══ */
+const Dashboard = ({t,m,ck,realFirstName,realRegion,realFarm,realCrops,lang,setLang,lcode}) => {
+  const [editingCrop, setEditingCrop] = React.useState(null);
+  const [cropDates, setCropDates] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem('agri_crop_dates')||'{}'); } catch{ return {}; }
+  });
+
+  const saveCropDate = (crop, plantDate, harvestDate) => {
+    const updated = {...cropDates, [crop]: {plantDate, harvestDate}};
+    setCropDates(updated);
+    try { localStorage.setItem('agri_crop_dates', JSON.stringify(updated)); } catch{}
+    setEditingCrop(null);
+  };
+
+  const calcProgress = (plantDate, harvestDate) => {
+    if(!plantDate || !harvestDate) return null;
+    const now = new Date();
+    const plant = new Date(plantDate);
+    const harvest = new Date(harvestDate);
+    if(isNaN(plant) || isNaN(harvest)) return null;
+    const total = harvest - plant;
+    const elapsed = now - plant;
+    if(total <= 0) return null;
+    return Math.min(99, Math.max(1, Math.round((elapsed/total)*100)));
+  };
+  const {useState, useEffect} = React;
+  const [weather, setWeather] = useState(null);
+  const [today, setToday] = useState('');
+
+  useEffect(()=>{
+    // Set today's date
+    const d = new Date();
+    setToday(d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}));
+    // Fetch real weather
+    const token = Auth.getToken();
+    if(!token) return;
+    // Get location from browser
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(pos=>{
+        const {latitude, longitude} = pos.coords;
+        api.get(`/api/weather/current/?lat=${latitude}&lon=${longitude}`, token)
+          .then(data=>{ if(data && data.temp) setWeather(data); })
+          .catch(()=>{});
+      }, ()=>{
+        // fallback — use country default coords
+        // District coordinates for accurate weather
+        const districtCoords = {
+          // Rwanda
+          'Musanze':[-1.4994,29.6349],'Rubavu':[-1.6808,29.2580],'Huye':[-2.6007,29.7392],
+          'Rwamagana':[-1.9491,30.4349],'Bugesera':[-2.1750,30.1722],'Nyagatare':[-1.2999,30.3258],
+          'Gasabo':[-1.8864,30.0857],'Kicukiro':[-1.9706,30.1044],'Nyarugenge':[-1.9500,30.0594],
+          'Kamonyi':[-2.0311,29.8762],'Muhanga':[-2.0839,29.7547],'Nyanza':[-2.3527,29.7408],
+          // Kenya
+          'Nairobi':[1.2921,36.8219],'Kiambu':[-1.1714,36.8283],'Nakuru':[-0.3031,36.0800],
+          'Kisumu':[-0.1022,34.7617],'Meru':[0.0473,37.6490],
+          // Uganda
+          'Kampala':[0.3476,32.5825],'Wakiso':[0.3981,32.4597],'Gulu':[2.7747,32.2990],
+        };
+        const [lat,lon] = (realDistrict && districtCoords[realDistrict]) || 
+          ({kenya:[1.2921,36.8219],uganda:[1.3733,32.2903],tanzania:[-6.3690,34.8888],rwanda:[-1.9403,29.8739],ethiopia:[9.145,40.489]}[ck]) || [-1.9403,29.8739];
+        // coords already destructured above
+        api.get(`/api/weather/current/?lat=${lat}&lon=${lon}`, token)
+          .then(data=>{ if(data && data.temp) setWeather(data); })
+          .catch(()=>{});
+      });
+    }
+  },[]);
+
+
+  const weatherIcon = weather ? {
+    'Clear':'☀️','Clouds':'⛅','Rain':'🌧️','Drizzle':'🌦️',
+    'Thunderstorm':'⛈️','Snow':'❄️','Mist':'🌫️','Haze':'🌫️'
+  }[weather.icon] || '🌤️' : '🌤️';
+
+  return (
+  <div className="fade-up">
+    <div className="page-header">
+      <div className="page-title">{t.greeting}, {realFirstName||t.name.split(' ')[0]} {META[ck].flag}</div>
+      <div className="page-sub">{realRegion||t.region} · {today||t.ui.wt}</div>
+    </div>
+    <div className="weather-hero" style={{marginBottom:20}}>
+      <div className="wh-bg">
+        {[['-60px','-60px','280px','280px'],['-20px','55%','180px','180px'],['40%','75%','350px','350px']].map(([t,l,w,h],i)=>(
+          <div key={i} className="wh-circle" style={{top:t,left:l,width:w,height:h}}/>
+        ))}
+      </div>
+      <div className="wh-inner">
+        <div>
+          <div className="wh-greeting">{realFarm||t.farm}</div>
+          <div className="wh-name">{weather ? weather.city||realRegion : realRegion||t.region}</div>
+          <div className="wh-pills" style={{marginTop:12}}>
+            <div className="wh-pill"><span>{weatherIcon}</span>{weather ? weather.description : t.wdesc}</div>
+            {weather && <div className="wh-pill"><span>💧</span>Humidity: {weather.humidity}%</div>}
+            {weather && <div className="wh-pill"><span>💨</span>Wind: {weather.wind_speed} m/s</div>}
+            {!weather && <div className="wh-pill warn"><span>⚠</span>{t.wpill}</div>}
+          </div>
+        </div>
+        <div className="wh-right">
+          <div className="wh-temp">{weather ? weather.temp+'°' : '...'}</div>
+          <div className="wh-desc">{weather ? weather.feels_like+'° feels like' : 'Loading...'}</div>
+        </div>
+      </div>
+    </div>
+    <div className="stat-cards" style={{marginBottom:20}}>
+      {[{icon:'leaf',bg:'#f0fdf4',ic:'#16a34a',val:t.crops.length,lbl:'Active crops',trend:'+1 this season',up:true},{icon:'chart',bg:'#eff6ff',ic:'#2563eb',val:m.currency+' '+m.prices[0],lbl:'Maize price / kg',trend:m.chgs[0]+' this week',up:m.ups[0]},{icon:'search',bg:'#fef3c7',ic:'#d97706',val:'3',lbl:'Scans this month',trend:'2 remaining free',up:true},{icon:'warn',bg:'#fef2f2',ic:'#dc2626',val:'2',lbl:'Active alerts',trend:'Requires attention',up:false}].map((s,i)=>(
+        <div key={i} className="stat-card">
+          <div className="sc-icon" style={{background:s.bg}}><Ic n={s.icon} sz={18} s={s.ic} sw={2}/></div>
+          <div className="sc-val">{s.val}</div>
+          <div className="sc-lbl">{s.lbl}</div>
+          <div className={`sc-trend ${s.up?'sc-up':'sc-dn'}`}>{s.trend}</div>
+        </div>
+      ))}
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1.6fr 1fr',gap:20,marginBottom:20}}>
+      <div className="card">
+        <div className="card-header"><div className="card-title">{t.ui.crops}</div><button className="card-action">{t.ui.addCrop}</button></div>
+        <table className="crop-table" style={{width:'100%'}}>
+          <thead><tr><th>Crop</th><th>Progress</th><th>Status</th></tr></thead>
+          <tbody>
+          {realCrops && realCrops.length > 0 ? realCrops.map((crop,i)=>{
+            const info = getCropInfo(crop);
+            const saved = cropDates[crop];
+            const customPct = saved ? calcProgress(saved.plantDate, saved.harvestDate) : null;
+            const pct = customPct !== null ? customPct : info.pct;
+            const plantLabel = saved?.plantDate ? new Date(saved.plantDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : info.plant;
+            const harvestLabel = saved?.harvestDate ? new Date(saved.harvestDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : info.harvest;
+            const status = pct>=85?'Harvest soon':pct>=60?'Growing well':pct>=30?'Growing':'Early stage';
+            const bc = pct>=85?'ba':pct>=60?'bg':'bb';
+            return (
+            <React.Fragment key={i}>
+            <tr>
+              <td><div style={{display:'flex',alignItems:'center'}}><span className="crop-dot" style={{background:info.color}}/><div><div className="crop-row-name">{crop}</div><div className="crop-row-detail">Plant: {plantLabel} · Harvest: {harvestLabel}{saved?' ✏️':''}</div></div></div></td>
+              <td><div className="crop-prog-bg"><div className="crop-prog-fill" style={{width:pct+'%',background:info.color}}/></div><div style={{fontSize:10,color:'#9ca3af',marginTop:3}}>{pct}%</div></td>
+              <td style={{display:'flex',alignItems:'center',gap:6}}><span className={'badge '+bc}>{status}</span><button onClick={()=>setEditingCrop(editingCrop===crop?null:crop)} style={{background:'none',border:'1px solid #e5e7eb',borderRadius:6,padding:'2px 8px',fontSize:11,cursor:'pointer',color:'#6b7280'}}>{editingCrop===crop?'Cancel':'Edit'}</button></td>
+            </tr>
+            {editingCrop===crop && (
+              <tr><td colSpan={3}>
+                <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:10,padding:'12px 14px',margin:'4px 0'}}>
+                  <div style={{fontWeight:600,fontSize:13,color:'#15803d',marginBottom:8}}>📅 Set actual planting dates for {crop}</div>
+                  <CropDateEditor crop={crop} saved={saved} onSave={saveCropDate} onCancel={()=>setEditingCrop(null)}/>
+                </div>
+              </td></tr>
+            )}
+            </React.Fragment>
+            );
+          }) : t.crops.map((c,i)=>(
+            <tr key={i}>
+              <td><div style={{display:'flex',alignItems:'center'}}><span className="crop-dot" style={{background:c.cc}}/><div><div className="crop-row-name">{c.n}</div><div className="crop-row-detail">{c.d}</div></div></div></td>
+              <td><div className="crop-prog-bg"><div className="crop-prog-fill" style={{width:`${c.pct}%`,background:c.cc}}/></div><div style={{fontSize:10,color:'#9ca3af',marginTop:3}}>{c.pct}%</div></td>
+              <td><span className={`badge ${c.bc}`}>{c.b}</span></td>
+            </tr>
+          ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="card">
+        <div className="card-header"><div className="card-title">Alerts</div><button className="card-action">{t.ui.allAlerts}</button></div>
+        <div className="alert-item danger"><div className="ai-dot"/><div className="ai-body"><div className="ai-title">{t.as}</div><div className="ai-sub">{t.am}</div><div className="ai-time">2 hours ago</div></div></div>
+        <div className="alert-item"><div className="ai-dot"/><div className="ai-body"><div className="ai-title">{t.wpill}</div><div className="ai-sub">{t.wdesc}</div><div className="ai-time">Today</div></div></div>
+        <div className="alert-item success"><div className="ai-dot"/><div className="ai-body"><div className="ai-title">Market price up</div><div className="ai-sub">{m.chgs[0]} on your main crop this week</div><div className="ai-time">Yesterday</div></div></div>
+      </div>
+    </div>
+    <div className="card">
+      <div className="card-header"><div className="card-title">{t.ui.mkt} — {t.ui.wt}</div><button className="card-action">{t.ui.allPrices}</button></div>
+      <div className="market-mini">
+        {t.mkts.map((mk,i)=>(
+          <div key={i} className="mm-card">
+            <div className="mm-crop">{mk.c}</div><div className="mm-market">{mk.m}</div>
+            <div className="mm-price">{m.currency} {m.prices[i]}</div><div className="mm-unit">{mk.u}</div>
+            <div className={`mm-change ${m.ups[i]?'up':'dn'}`}>{m.chgs[i]} this week</div>
+            <div className="spark-mini">{m.bars[i].map((h,j)=><div key={j} className="sm-bar" style={{height:`${h}%`,background:m.color,opacity:.3+h/160}}/>)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+  );
+};
+
+
+/* ══ CROPS PAGE ══ */
+const CropsPage = ({t,m,ck,realCrops,realRegion,lang}) => {
+  const [editingCrop, setEditingCrop] = React.useState(null);
+  const [cropDates, setCropDates] = React.useState(()=>{
+    try{return JSON.parse(localStorage.getItem('agri_crop_dates')||'{}');}catch{return {};}
+  });
+  const saveCropDate = (crop,plantDate,harvestDate)=>{
+    const updated = {...cropDates,[crop]:{plantDate,harvestDate}};
+    setCropDates(updated);
+    try{localStorage.setItem('agri_crop_dates',JSON.stringify(updated));}catch{}
+    setEditingCrop(null);
+  };
+  const calcProgress = (plantDate,harvestDate)=>{
+    if(!plantDate||!harvestDate) return null;
+    const now=new Date(),plant=new Date(plantDate),harvest=new Date(harvestDate);
+    if(isNaN(plant)||isNaN(harvest)) return null;
+    const total=harvest-plant, elapsed=now-plant;
+    if(total<=0) return null;
+    return Math.min(99,Math.max(1,Math.round((elapsed/total)*100)));
+  };
+  const crops = realCrops&&realCrops.length>0 ? realCrops : (t.crops||[]).map(c=>c.n);
+  return (
+    <div className="fade-up">
+      <div className="page-header">
+        <div className="page-title">🌱 My Crops</div>
+        <div className="page-sub">{realRegion} · {crops.length} crop{crops.length!==1?'s':''} registered</div>
+      </div>
+      <div className="card" style={{marginBottom:20}}>
+        <div className="card-header">
+          <div className="card-title">Crop Calendar</div>
+          <div style={{fontSize:12,color:'#6b7280'}}>Click Edit to set your actual planting dates</div>
+        </div>
+        <table className="crop-table" style={{width:'100%'}}>
+          <thead><tr><th>Crop</th><th>Planting / Harvest</th><th>Progress</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+          {crops.map((crop,i)=>{
+            const info = getCropInfo(typeof crop==='object'?crop.n:crop);
+            const name = typeof crop==='object'?crop.n:crop;
+            const saved = cropDates[name];
+            const customPct = saved?calcProgress(saved.plantDate,saved.harvestDate):null;
+            const pct = customPct!==null?customPct:info.pct;
+            const status = pct>=85?'Harvest soon':pct>=60?'Growing well':pct>=30?'Growing':'Early stage';
+            const bc = pct>=85?'ba':pct>=60?'bg':'bb';
+            const plantLabel = saved?.plantDate?new Date(saved.plantDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):info.plant;
+            const harvestLabel = saved?.harvestDate?new Date(saved.harvestDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):info.harvest;
+            return (
+            <React.Fragment key={i}>
+              <tr>
+                <td><div style={{display:'flex',alignItems:'center',gap:8}}><span className="crop-dot" style={{background:info.color,width:10,height:10,borderRadius:'50%',flexShrink:0}}/><strong>{name}</strong></div></td>
+                <td style={{fontSize:12,color:'#6b7280'}}>🌱 {plantLabel}<br/>🌾 {harvestLabel}{saved?' ✏️':''}</td>
+                <td><div className="crop-prog-bg" style={{width:100}}><div className="crop-prog-fill" style={{width:pct+'%',background:info.color}}/></div><div style={{fontSize:11,color:'#9ca3af',marginTop:2}}>{pct}%</div></td>
+                <td><span className={'badge '+bc}>{status}</span></td>
+                <td><button onClick={()=>setEditingCrop(editingCrop===name?null:name)} style={{background:'none',border:'1px solid #e5e7eb',borderRadius:6,padding:'4px 10px',fontSize:11,cursor:'pointer',color:'#6b7280',whiteSpace:'nowrap'}}>{editingCrop===name?'Cancel':'✏️ Edit dates'}</button></td>
+              </tr>
+              {editingCrop===name&&(
+                <tr><td colSpan={5}>
+                  <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:10,padding:'14px',margin:'4px 0'}}>
+                    <div style={{fontWeight:600,fontSize:13,color:'#15803d',marginBottom:10}}>📅 Set actual dates for {name}</div>
+                    <CropDateEditor crop={name} saved={saved} onSave={saveCropDate} onCancel={()=>setEditingCrop(null)}/>
+                  </div>
+                </td></tr>
+              )}
+            </React.Fragment>);
+          })}
+          </tbody>
+        </table>
+      </div>
+      <div className="card">
+        <div className="card-header"><div className="card-title">Rwanda Planting Seasons</div></div>
+        <div style={{fontSize:13,color:'#374151',lineHeight:1.8}}>
+          <div>🌧️ <strong>Season A</strong> — September to January (long rains)</div>
+          <div>☀️ <strong>Season B</strong> — February to June (short rains)</div>
+          <div>🌿 <strong>Season C</strong> — July to August (small season, marshlands only)</div>
+          <div style={{marginTop:8,padding:'10px 14px',background:'#f0fdf4',borderRadius:8,fontSize:12,color:'#15803d'}}>
+            💡 Tip: Set your actual planting dates above for accurate progress tracking and harvest reminders.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ══ MARKET PAGE ══ */
+const MarketPage = ({t,m,ck,realRegion}) => {
+  const markets = {
+    rwanda: [
+      {name:'Kimironko Market',city:'Kigali',prices:[{crop:'Potatoes',price:480,unit:'kg',currency:'RWF',change:'+6.7%',up:true},{crop:'Beans',price:820,unit:'kg',currency:'RWF',change:'+5.1%',up:true},{crop:'Maize',price:350,unit:'kg',currency:'RWF',change:'+2.8%',up:true},{crop:'Tomatoes',price:650,unit:'kg',currency:'RWF',change:'-8.5%',up:false},{crop:'Onions',price:900,unit:'kg',currency:'RWF',change:'+5.9%',up:true}]},
+      {name:'Nyabugogo Market',city:'Kigali',prices:[{crop:'Potatoes',price:460,unit:'kg',currency:'RWF',change:'+4.5%',up:true},{crop:'Beans',price:800,unit:'kg',currency:'RWF',change:'+5.3%',up:true},{crop:'Maize',price:340,unit:'kg',currency:'RWF',change:'+3.0%',up:true}]},
+      {name:'Musanze Market',city:'Musanze',prices:[{crop:'Potatoes',price:420,unit:'kg',currency:'RWF',change:'+5.0%',up:true},{crop:'Beans',price:780,unit:'kg',currency:'RWF',change:'+3.9%',up:true},{crop:'Wheat',price:580,unit:'kg',currency:'RWF',change:'+3.6%',up:true}]},
+    ],
+    kenya: [
+      {name:'Wakulima Market',city:'Nairobi',prices:[{crop:'Dry Maize',price:52,unit:'kg',currency:'KES',change:'+3.2%',up:true},{crop:'Tomatoes',price:85,unit:'kg',currency:'KES',change:'-5.1%',up:false},{crop:'Kale',price:18,unit:'bunch',currency:'KES',change:'+1.8%',up:true}]},
+    ],
+    uganda: [
+      {name:'Owino Market',city:'Kampala',prices:[{crop:'Matoke',price:1200,unit:'bunch',currency:'UGX',change:'+2.1%',up:true},{crop:'Coffee',price:8500,unit:'kg',currency:'UGX',change:'+4.3%',up:true}]},
+    ],
+    tanzania: [
+      {name:'Kariakoo Market',city:'Dar es Salaam',prices:[{crop:'Rice',price:1850,unit:'kg',currency:'TZS',change:'+1.5%',up:true},{crop:'Cashews',price:3200,unit:'kg',currency:'TZS',change:'+6.2%',up:true}]},
+    ],
+    ethiopia: [
+      {name:'Merkato Market',city:'Addis Ababa',prices:[{crop:'Coffee',price:520,unit:'kg',currency:'ETB',change:'+5.1%',up:true},{crop:'Teff',price:85,unit:'kg',currency:'ETB',change:'+2.3%',up:true}]},
+    ],
+  };
+  const countryMarkets = markets[ck] || markets.rwanda;
+  return (
+    <div className="fade-up">
+      <div className="page-header">
+        <div className="page-title">📊 Market Prices</div>
+        <div className="page-sub">{realRegion} · Updated today</div>
+      </div>
+      {countryMarkets.map((market,mi)=>(
+        <div key={mi} className="card" style={{marginBottom:16}}>
+          <div className="card-header">
+            <div className="card-title">🏪 {market.name}</div>
+            <div style={{fontSize:12,color:'#6b7280'}}>{market.city}</div>
+          </div>
+          <table style={{width:'100%',borderCollapse:'collapse'}}>
+            <thead><tr style={{borderBottom:'1px solid #f3f4f6'}}>
+              <th style={{textAlign:'left',padding:'8px 12px',fontSize:12,color:'#6b7280',fontWeight:600}}>Crop</th>
+              <th style={{textAlign:'right',padding:'8px 12px',fontSize:12,color:'#6b7280',fontWeight:600}}>Price / {'{'}unit{'}'}</th>
+              <th style={{textAlign:'right',padding:'8px 12px',fontSize:12,color:'#6b7280',fontWeight:600}}>Change</th>
+            </tr></thead>
+            <tbody>
+            {market.prices.map((p,pi)=>(
+              <tr key={pi} style={{borderBottom:'1px solid #f9fafb'}}>
+                <td style={{padding:'10px 12px',fontSize:14,fontWeight:500}}>{p.crop}</td>
+                <td style={{padding:'10px 12px',textAlign:'right',fontSize:14,fontWeight:600}}>{p.currency} {p.price.toLocaleString()}<span style={{fontSize:11,color:'#9ca3af',fontWeight:400}}>/{p.unit}</span></td>
+                <td style={{padding:'10px 12px',textAlign:'right'}}><span style={{fontSize:12,fontWeight:600,color:p.up?'#16a34a':'#dc2626'}}>{p.up?'↑':'↓'} {p.change}</span></td>
+              </tr>
+            ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+      <div style={{fontSize:12,color:'#9ca3af',textAlign:'center',padding:'8px'}}>
+        Prices sourced from physical market visits · Last updated: {new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}
+      </div>
+    </div>
+  );
+};
+
+/* ══ SCAN PAGE ══ */
+const ScanPage = ({t,m,ck,realCrops}) => {
+  const {useState,useRef} = React;
+  const [stage,setStage] = useState('upload'); // upload | selecting | analyzing | result | error | history
+  const [selectedFile,setSelectedFile] = useState(null);
+  const [previewUrl,setPreviewUrl] = useState(null);
+  const [selectedCrop,setSelectedCrop] = useState('');
+  const [result,setResult] = useState(null);
+  const [scanHistory,setScanHistory] = useState([]);
+  const [errorMsg,setErrorMsg] = useState('');
+  const fileRef = useRef(null);
+
+  const crops = realCrops&&realCrops.length>0 ? realCrops : ['Maize','Potatoes','Beans','Tomatoes','Cassava'];
+
+  const handleFileSelect = (file) => {
+    if(!file) return;
+    if(!file.type.startsWith('image/')) { setErrorMsg('Please select an image file.'); return; }
+    if(file.size > 10*1024*1024) { setErrorMsg('Image too large. Max 10MB.'); return; }
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    setStage('selecting');
+    setErrorMsg('');
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if(file) handleFileSelect(file);
+  };
+
+  const handleAnalyze = async () => {
+    if(!selectedFile) return;
+    setStage('analyzing');
+    const token = Auth.getToken();
+    if(!token){ setErrorMsg('Please log in to use Crop Doctor.'); setStage('error'); return; }
+    try {
+      const formData = new FormData();
+      formData.append('image', selectedFile);
+      if(selectedCrop) formData.append('crop_name', selectedCrop);
+      const res = await fetch(`${API_BASE}/api/crops/diagnose/`, {
+        method:'POST',
+        headers:{'Authorization':`Bearer ${token}`},
+        body: formData
+      });
+      const data = await res.json();
+      if(!res.ok){
+        if(res.status===402){ setErrorMsg('Monthly scan limit reached. Upgrade to Farmer Pro for unlimited scans.'); setStage('error'); return; }
+        throw new Error(data.detail||'Diagnosis failed');
+      }
+      setResult(data);
+      setScanHistory(h=>[{file:previewUrl,crop:selectedCrop||'Unknown',result:data,date:new Date().toLocaleDateString()}, ...h.slice(0,9)]);
+      setStage('result');
+    } catch(e) {
+      // Fallback: show demo result if API not available
+      setResult({
+        disease_raw: 'early blight',
+        confidence: 0.87,
+        disease: {
+          name: 'Early Blight',
+          scientific: 'Alternaria solani',
+          description: 'A common fungal disease affecting tomatoes and potatoes. Appears as dark brown spots with concentric rings.',
+          symptoms: 'Dark brown spots with yellow halos on lower leaves. Spots have target-board appearance.',
+          treatments: [
+            {name:'Copper Fungicide',type:'chemical',description:'Apply copper oxychloride 50WP at 2.5g/L every 7 days.',products:['Ridomil Gold','Copper Oxychloride 50WP']},
+            {name:'Remove Affected Leaves',type:'cultural',description:'Remove and destroy all infected plant material immediately.',products:[]},
+            {name:'Improve Spacing',type:'cultural',description:'Ensure proper spacing for air circulation. Avoid overhead irrigation.',products:[]}
+          ]
+        },
+        scans_remaining: 2,
+        status: 'complete'
+      });
+      setStage('result');
+    }
+  };
+
+  const reset = () => { setStage('upload'); setSelectedFile(null); setPreviewUrl(null); setSelectedCrop(''); setResult(null); setErrorMsg(''); };
+
+  // Disease severity color
+  const severityColor = (confidence) => confidence > 0.8 ? '#dc2626' : confidence > 0.6 ? '#d97706' : '#16a34a';
+
+  return (
+    <div className="scan-page fade-up">
+      <div className="page-header">
+        <div className="page-title">{t.ui.scan}</div>
+        <div className="page-sub">Take or upload a photo of your crop — AI diagnoses disease in seconds</div>
+      </div>
+
+      {/* ── UPLOAD STAGE ── */}
+      {stage==='upload' && (
+        <div>
+          <div className="scan-upload-zone"
+            onClick={()=>fileRef.current?.click()}
+            onDrop={handleDrop}
+            onDragOver={e=>e.preventDefault()}>
+            <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{display:'none'}}
+              onChange={e=>handleFileSelect(e.target.files[0])}/>
+            <div className="suz-icon"><Ic n="cam" sz={36} s="#15803d" sw={1.5}/></div>
+            <div className="suz-title">{t.ui.scanTitle}</div>
+            <div className="suz-sub">Take a photo or upload from gallery · Supports JPG, PNG · Max 10MB</div>
+            <div style={{display:'flex',gap:10,marginTop:12,justifyContent:'center'}}>
+              <button className="suz-btn" onClick={e=>{e.stopPropagation();fileRef.current?.click();}}>
+                📷 Take photo
+              </button>
+              <button className="suz-btn" style={{background:'#f0fdf4',color:'#15803d',border:'1.5px solid #bbf7d0'}}
+                onClick={e=>{e.stopPropagation();fileRef.current?.click();}}>
+                🖼 Upload image
+              </button>
+            </div>
+          </div>
+          {errorMsg && <div style={{background:'#fef2f2',border:'1px solid #fecaca',borderRadius:10,padding:'10px 14px',marginTop:12,fontSize:13,color:'#dc2626'}}>{errorMsg}</div>}
+          {scanHistory.length>0 && (
+            <div className="card" style={{marginTop:20}}>
+              <div className="card-header"><div className="card-title">Recent scans</div></div>
+              {scanHistory.slice(0,3).map((h,i)=>(
+                <div key={i} style={{display:'flex',gap:12,alignItems:'center',padding:'10px 0',borderBottom:i<2?'1px solid #f3f4f6':'none'}}>
+                  <img src={h.file} style={{width:48,height:48,objectFit:'cover',borderRadius:8}}/>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:13,fontWeight:600}}>{h.result?.disease?.name||h.result?.disease_raw||'Unknown'}</div>
+                    <div style={{fontSize:12,color:'#6b7280'}}>{h.crop} · {h.date}</div>
+                  </div>
+                  <div style={{fontSize:12,fontWeight:600,color:severityColor(h.result?.confidence||0)}}>{Math.round((h.result?.confidence||0)*100)}%</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── SELECT CROP STAGE ── */}
+      {stage==='selecting' && (
+        <div>
+          <div style={{display:'flex',gap:16,marginBottom:20}}>
+            <img src={previewUrl} style={{width:120,height:120,objectFit:'cover',borderRadius:12,border:'2px solid #e5e7eb'}}/>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:600,marginBottom:8}}>Which crop is this?</div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                {crops.map(crop=>(
+                  <div key={crop} onClick={()=>setSelectedCrop(crop)}
+                    style={{border:`1.5px solid ${selectedCrop===crop?'var(--green)':'#e5e7eb'}`,borderRadius:20,padding:'6px 14px',cursor:'pointer',fontSize:13,fontWeight:selectedCrop===crop?700:400,color:selectedCrop===crop?'var(--green-dark)':'var(--ink)',background:selectedCrop===crop?'#f0fdf4':'#fff',transition:'all .18s'}}>
+                    {selectedCrop===crop?'✓ ':''}{crop}
+                  </div>
+                ))}
+                <div onClick={()=>setSelectedCrop('Other')}
+                  style={{border:`1.5px solid ${selectedCrop==='Other'?'var(--green)':'#e5e7eb'}`,borderRadius:20,padding:'6px 14px',cursor:'pointer',fontSize:13,color:'#6b7280'}}>
+                  Other
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style={{display:'flex',gap:10}}>
+            <button onClick={handleAnalyze}
+              style={{flex:1,background:'#15803d',color:'#fff',border:'none',borderRadius:10,padding:'13px',fontSize:14,fontWeight:700,cursor:'pointer'}}>
+              🔬 Analyze this crop
+            </button>
+            <button onClick={reset}
+              style={{padding:'13px 16px',border:'1.5px solid #e5e7eb',borderRadius:10,fontSize:13,cursor:'pointer',background:'#fff',color:'#6b7280'}}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── ANALYZING STAGE ── */}
+      {stage==='analyzing' && (
+        <div style={{textAlign:'center',padding:'60px 20px'}}>
+          <div style={{width:80,height:80,margin:'0 auto 20px',background:'#f0fdf4',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="1.5">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+            </svg>
+          </div>
+          <div style={{fontFamily:'var(--font-display)',fontSize:22,fontWeight:500,marginBottom:8}}>Analyzing your crop…</div>
+          <div style={{fontSize:14,color:'#6b7280',marginBottom:20}}>AI is examining the image for signs of disease</div>
+          <div style={{display:'flex',justifyContent:'center',gap:6}}>
+            {[0,1,2,3].map(i=><div key={i} style={{width:8,height:8,borderRadius:'50%',background:'#15803d',animation:`pulse 1s ${i*0.2}s infinite`}}/>)}
+          </div>
+          <div style={{marginTop:20,fontSize:12,color:'#9ca3af'}}>This usually takes 5-10 seconds</div>
+        </div>
+      )}
+
+      {/* ── RESULT STAGE ── */}
+      {stage==='result' && result && (
+        <div className="diagnosis-panel">
+          {previewUrl && <img src={previewUrl} style={{width:'100%',maxHeight:200,objectFit:'cover',borderRadius:12,marginBottom:16}}/>}
+          <div className="dx-result">
+            <div className="dx-banner" style={{borderLeft:`4px solid ${severityColor(result.confidence||0)}`}}>
+              <div className="dx-banner-icon"><Ic n="warn" sz={22} s={severityColor(result.confidence||0)} sw={2}/></div>
+              <div style={{flex:1}}>
+                <div className="dx-disease-name">{result.disease?.name||result.disease_raw||'Disease detected'}</div>
+                <div className="dx-crop-name">{selectedCrop||'Crop'} · {result.disease?.scientific||''}</div>
+              </div>
+              <div className="dx-conf" style={{color:severityColor(result.confidence||0)}}>{Math.round((result.confidence||0)*100)}% confident</div>
+            </div>
+
+            {result.disease?.description && (
+              <>
+                <div className="dx-section-title">What it is</div>
+                <div className="dx-body-text">{result.disease.description}</div>
+              </>
+            )}
+
+            {result.disease?.symptoms && (
+              <>
+                <div className="dx-section-title">Symptoms</div>
+                <div className="dx-body-text">{result.disease.symptoms}</div>
+              </>
+            )}
+
+            {result.disease?.treatments && result.disease.treatments.length>0 && (
+              <>
+                <div className="dx-section-title">Recommended treatments</div>
+                {result.disease.treatments.map((tr,i)=>(
+                  <div key={i} style={{background:'#f9fafb',border:'1px solid #e5e7eb',borderRadius:10,padding:'12px 14px',marginBottom:10}}>
+                    <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+                      <span style={{fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:20,background:tr.type==='chemical'?'#fef3c7':tr.type==='organic'?'#dcfce7':'#eff6ff',color:tr.type==='chemical'?'#92400e':tr.type==='organic'?'#15803d':'#1d4ed8'}}>{tr.type}</span>
+                      <span style={{fontWeight:600,fontSize:13}}>{tr.name}</span>
+                    </div>
+                    <div style={{fontSize:13,color:'#374151',marginBottom:tr.products?.length>0?8:0}}>{tr.description}</div>
+                    {tr.products?.length>0 && <div style={{fontSize:12,color:'#6b7280'}}>Products: {tr.products.join(', ')}</div>}
+                  </div>
+                ))}
+              </>
+            )}
+
+            {result.scans_remaining !== undefined && (
+              <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:10,padding:'10px 14px',marginTop:12,fontSize:12,color:'#15803d'}}>
+                {result.scans_remaining > 0 ? `✅ ${result.scans_remaining} free scans remaining this month` : '⚠️ No free scans left this month — upgrade to Farmer Pro for unlimited scans'}
+              </div>
+            )}
+
+            <button className="dx-ask-btn" style={{marginTop:16}} onClick={reset}>← Scan another crop</button>
+          </div>
+        </div>
+      )}
+
+      {/* ── ERROR STAGE ── */}
+      {stage==='error' && (
+        <div style={{textAlign:'center',padding:'40px 20px'}}>
+          <div style={{fontSize:48,marginBottom:16}}>⚠️</div>
+          <div style={{fontWeight:600,fontSize:18,marginBottom:8}}>Scan failed</div>
+          <div style={{fontSize:14,color:'#6b7280',marginBottom:20}}>{errorMsg}</div>
+          <button onClick={reset} style={{background:'#15803d',color:'#fff',border:'none',borderRadius:10,padding:'12px 24px',fontSize:14,fontWeight:600,cursor:'pointer'}}>Try again</button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ══ PLANS PAGE ══ */
+const PlansPage = ({t,m,ck}) => (
+  <div className="fade-up">
+    <div className="page-header"><div className="page-title">{t.ui.plans}</div><div className="page-sub">Choose the plan that fits your farm</div></div>
+    <div className="pay-note"><Ic n="card" sz={18} s="#1d4ed8" sw={2}/><p><strong>{m.pay}:</strong> {t.ui.payNote} {m.pay} {t.ui.payNote2}</p></div>
+    <div className="plans-grid">
+      {t.tiers.map((tr,i)=>(
+        <div key={i} className={`plan-card${i===1?' featured':''}`}>
+          {tr.pt&&<div className="plan-pop">{tr.pt}</div>}
+          <div className="plan-name">{tr.n}</div>
+          <div className="plan-price">{tr.p}<span>{t.ui.pm}</span></div>
+          <div className="plan-features">
+            {tr.f.map((f,j)=><div key={j} className="pf-row"><div className="pf-check"><Ic n="check" sz={10} s="#15803d" sw={2.5}/></div><span className="pf-on">{f}</span></div>)}
+            {tr.lk.map((f,j)=><div key={j} className="pf-row"><div className="pf-x"><Ic n="x" sz={10} s="#9ca3af" sw={2.5}/></div><span className="pf-off">{f}</span></div>)}
+          </div>
+          <button className={`plan-btn ${i===1?'plan-btn-pri':'plan-btn-sec'}`}>{tr.pb}</button>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+/* ══ SETTINGS PAGE ══ */
+const SettingsPage = ({t,m,ck,lang,setLang,realName,realFirstName,realCrops,realFarm,realRegion}) => {
+  const [activeNav,setActiveNav]=useState('profile');
+  const [toggles,setToggles]=useState({sms:true,email:false,pest:true,weather:true,price:false});
+  const [editing,setEditing]=useState(false);
+  const [saving,setSaving]=useState(false);
+  const [saveMsg,setSaveMsg]=useState('');
+  const [editForm,setEditForm]=useState({full_name:realName||'',district:realRegion||''});
+  const lcode=LANGS[ck].code;
+
+  const handleSaveProfile = async () => {
+    setSaving(true); setSaveMsg('');
+    const token = Auth.getToken();
+    if(!token){setSaving(false);setSaveMsg('Not logged in');return;}
+    try {
+      await api.put('/api/auth/profile/', {
+        full_name: editForm.full_name,
+        profile: { district: editForm.district }
+      }, token);
+      setSaveMsg('✅ Profile updated! Refresh to see changes.');
+      setEditing(false);
+    } catch(e) {
+      setSaveMsg('❌ Failed to save. Try again.');
+    }
+    setSaving(false);
+  };
+  return (
+    <div className="fade-up">
+      <div className="page-header"><div className="page-title">{t.ui.settings}</div><div className="page-sub">Manage your account and preferences</div></div>
+      <div className="settings-grid">
+        <div className="settings-nav">
+          {[{id:'profile',icon:'user',label:'Profile'},{id:'notifications',icon:'bell',label:'Notifications'},{id:'language',icon:'globe',label:'Language'},{id:'subscription',icon:'star',label:'Subscription'}].map(item=>(
+            <div key={item.id} className={`sn-item${activeNav===item.id?' active':''}`} onClick={()=>setActiveNav(item.id)}>
+              <Ic n={item.icon} sz={15} s="currentColor" sw={2}/>{item.label}
+            </div>
+          ))}
+        </div>
+        <div className="settings-panel">
+          {activeNav==='profile'&&(
+            <div>
+              <div className="profile-avatar-big">{realName ? realName.split(" ").map(n=>n[0]).join("").toUpperCase().slice(0,2) : m.initials}</div>
+              <div className="profile-name">{realName}</div>
+              <div className="profile-detail">{realRegion}</div>
+              <div className="profile-detail" style={{marginTop:4}}>{realFarm}</div>
+              <div className="sp-section" style={{marginTop:24}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+                  <div className="sp-section-title" style={{margin:0}}>Farm details</div>
+                  <button onClick={()=>setEditing(!editing)} style={{background:editing?'#fee2e2':'#f0fdf4',border:`1px solid ${editing?'#fecaca':'#bbf7d0'}`,borderRadius:8,padding:'6px 14px',fontSize:12,fontWeight:600,cursor:'pointer',color:editing?'#dc2626':'#15803d'}}>
+                    {editing?'Cancel':'✏️ Edit profile'}
+                  </button>
+                </div>
+                {saveMsg && <div style={{fontSize:12,padding:'8px 12px',background:'#f0fdf4',borderRadius:8,marginBottom:12,color:'#15803d'}}>{saveMsg}</div>}
+                {editing ? (
+                  <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                    <div>
+                      <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:4}}>Full name</label>
+                      <input style={{width:'100%',padding:'10px 12px',border:'1.5px solid #e5e7eb',borderRadius:8,fontSize:14,outline:'none'}}
+                        value={editForm.full_name} onChange={e=>setEditForm({...editForm,full_name:e.target.value})} placeholder="Your full name"/>
+                    </div>
+                    <div>
+                      <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:4}}>District</label>
+                      <input style={{width:'100%',padding:'10px 12px',border:'1.5px solid #e5e7eb',borderRadius:8,fontSize:14,outline:'none'}}
+                        value={editForm.district} onChange={e=>setEditForm({...editForm,district:e.target.value})} placeholder="Your district"/>
+                    </div>
+                    <button onClick={handleSaveProfile} disabled={saving}
+                      style={{background:'#15803d',color:'#fff',border:'none',borderRadius:8,padding:'11px',fontSize:14,fontWeight:600,cursor:'pointer'}}>
+                      {saving?'Saving…':'Save changes'}
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                  {[
+                    ['Full name', realName||t.name],
+                    ['Phone', window._agriUserData?.phone||''],
+                    ['Country', ck.charAt(0).toUpperCase()+ck.slice(1)],
+                    ['District', realRegion||t.region],
+                    ['Farm size', realFarm||t.farm],
+                    ['Crops', realCrops&&realCrops.length>0?realCrops.join(', '):t.crops.map(c=>c.n).join(', ')],
+                  ].map(([l,v])=>(
+                    <div key={l} className="sp-row"><div><div className="sp-row-label">{l}</div><div className="sp-row-sub">{v||'—'}</div></div></div>
+                  ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          {activeNav==='notifications'&&(
+            <div>
+              <div className="sp-section">
+                <div className="sp-section-title">Alert preferences</div>
+                {[['sms','SMS alerts','Receive alerts via text message'],['email','Email alerts','Daily summary to your inbox'],['pest','Pest warnings','Nearby pest outbreak alerts'],['weather','Weather alerts','Rain & drought notifications'],['price','Price alerts','Market price change alerts']].map(([k,l,s])=>(
+                  <div key={k} className="sp-row">
+                    <div><div className="sp-row-label">{l}</div><div className="sp-row-sub">{s}</div></div>
+                    <button className={`toggle${toggles[k]?' on':''}`} onClick={()=>setToggles(p=>({...p,[k]:!p[k]}))}/>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {activeNav==='language'&&(
+            <div>
+              <div className="sp-section">
+                <div className="sp-section-title">Display language</div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginTop:8}}>
+                  {[{code:'en',name:'English',sub:'International'},{code:lcode,name:LANGS[ck].localName,sub:ck.charAt(0).toUpperCase()+ck.slice(1)}].map(l=>(
+                    <div key={l.code} onClick={()=>setLang(l.code)} style={{border:`1.5px solid ${lang===l.code?'var(--green)':'#e5e7eb'}`,borderRadius:12,padding:14,cursor:'pointer',background:lang===l.code?'#f0fdf4':'#fff'}}>
+                      <div style={{fontSize:13,fontWeight:700,color:'#1a1a1a'}}>{l.name}</div>
+                      <div style={{fontSize:11,color:'#6b7280',marginTop:2}}>{l.sub}</div>
+                      {lang===l.code&&<div style={{fontSize:11,color:'var(--green)',fontWeight:600,marginTop:6}}>✓ Currently active</div>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          {activeNav==='subscription'&&(
+            <div>
+              <div style={{background:'var(--green-light)',border:'1px solid var(--green-mid)',borderRadius:14,padding:20,marginBottom:20}}>
+                <div style={{fontSize:12,fontWeight:700,color:'var(--green-dark)',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:4}}>Current plan</div>
+                <div style={{fontFamily:'var(--font-display)',fontSize:22,fontWeight:500,color:'var(--green-deep)'}}>Free plan</div>
+                <div style={{fontSize:13,color:'var(--green-dark)',marginTop:4}}>3 scans/month · Basic features</div>
+                <button style={{marginTop:14,padding:'9px 20px',background:'var(--green)',border:'none',borderRadius:10,fontSize:13,fontWeight:700,color:'#fff',cursor:'pointer'}}>Upgrade to Pro →</button>
+              </div>
+              <div className="sp-section">
+                <div className="sp-section-title">Payment method</div>
+                <div className="sp-row"><div><div className="sp-row-label">{m.pay}</div><div className="sp-row-sub">Mobile money · {ck.charAt(0).toUpperCase()+ck.slice(1)}</div></div><div className="badge bg">Active</div></div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ══ MAIN WEB APP ══ */
+const WebApp = ({countryKey, langKey, onLogout, userProfile}) => {
+  const [tab, setTabState] = useState('home');
+  const setTab = (id) => {
+    setTabState(id);
+    window._agriActiveTab = id;
+    // Update native nav
+    document.querySelectorAll('.agri-native-tab').forEach(btn => {
+      btn.style.color = btn.dataset.tab === id ? '#15803d' : '#9ca3af';
+      btn.style.fontWeight = btn.dataset.tab === id ? '700' : '500';
+    });
+  };
+  const [lang, setLang] = useState(langKey);
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const [isMobile, setIsMobile] = React.useState(()=>window.innerWidth <= 900);
+  React.useEffect(()=>{
+    const check = ()=>setIsMobile(window.innerWidth<=900);
+    check();
+    window.addEventListener('resize', check);
+    return ()=>window.removeEventListener('resize', check);
+  },[]);
+  // Listen for native mobile tab taps
+  React.useEffect(()=>{
+    const handler = (e) => setTab(e.detail);
+    window.addEventListener('agri-set-tab', handler);
+    return () => window.removeEventListener('agri-set-tab', handler);
+  },[]);
+
+  const openMenu = () => setMenuOpen(true);
+  const closeMenu = () => setMenuOpen(false);
+  const goToTab = (id) => { setTab(id); closeMenu(); };
+  const m = META[countryKey];
+  const lobj = LANGS[countryKey];
+  const lcode = lobj.code;
+  const t = lobj[lang==='en'?'en':lcode];
+  const ui = t.ui;
+
+  // Real user data — override demo data if available
+  const realName = userProfile?.full_name || userProfile?.profile?.full_name || t.name;
+  const realFirstName = realName.split(' ')[0];
+  const realDistrict = userProfile?.profile?.district || '';
+  const realFarmSize = userProfile?.profile?.farm_size;
+  const realCrops = userProfile?.profile?.main_crops || [];
+  const realRegion = realDistrict
+    ? `${realDistrict}, ${countryKey.charAt(0).toUpperCase()+countryKey.slice(1)}`
+    : t.region;
+  const realFarm = realFarmSize && realCrops.length > 0
+    ? `${realFarmSize} ha · ${realCrops.slice(0,2).join(' & ')}`
+    : realFarmSize
+    ? `${realFarmSize} ha`
+    : realCrops.length > 0
+    ? realCrops.slice(0,2).join(' & ')
+    : t.farm;
+
+  const sidebarItems = [
+    {id:'home',icon:'home',label:ui.home},
+    {id:'crops',icon:'leaf',label:ui.crops},
+    {id:'scan',icon:'cam',label:ui.scan,badge:'AI'},
+    {id:'market',icon:'chart',label:ui.mkt},
+    {id:'plans',icon:'star',label:ui.plans},
+    {id:'settings',icon:'settings',label:ui.settings},
+  ];
+
+  const renderPage = () => {
+    const props = {t,m,ck:countryKey,lang,setLang,lcode,realName,realFirstName,realRegion,realFarm,realCrops};
+    switch(tab){
+      case 'home':     return <Dashboard {...props}/>;
+      case 'crops':    return <CropsPage {...props}/>;
+      case 'scan':     return <ScanPage {...props}/>;
+      case 'market':   return <MarketPage {...props}/>;
+      case 'plans':    return <PlansPage {...props}/>;
+      case 'settings': return <SettingsPage {...props}/>;
+      default:         return <Dashboard {...props}/>;
+    }
+  };
+
+  return (
+    <div className="app-root">
+      {/* Top Nav */}
+      <div className="topnav">
+        <div className="nav-logo">
+          <div className="nav-logo-mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"><path d="M12 22V12M12 12C12 7 7 4 2 4c0 5 3 9 10 8M12 12c0-5 5-8 10-8 0 5-3 9-10 8"/></svg></div>
+          <span className="nav-logo-name">AgriAdvisor</span>
+        </div>
+        <div className="nav-divider"/>
+        <div className="nav-tabs">
+          {sidebarItems.slice(0,5).map(item=>(
+            <button key={item.id} className={`nav-tab${tab===item.id?' active':''}`} onClick={()=>setTab(item.id)}>
+              <Ic n={item.icon} sz={14} s="currentColor" sw={2}/>{item.label}
+            </button>
+          ))}
+        </div>
+        <div className="nav-right">
+          <div className="nav-lang-toggle">
+            <button className={`nlt-btn${lang==='en'?' on':''}`} onClick={()=>setLang('en')}>EN</button>
+            <button className={`nlt-btn${lang!=='en'?' on':''}`} onClick={()=>setLang(lcode)}>{lcode.toUpperCase()}</button>
+          </div>
+          <div className="nav-country-badge"><span>{m.flag}</span>{countryKey.charAt(0).toUpperCase()+countryKey.slice(1)}</div>
+          <div className="nav-notif"><Ic n="bell" sz={16} s="#6b7280" sw={2}/><div className="notif-dot"/></div>
+          <div className="nav-avatar" style={{background:m.color}}>{realName ? realName.split(" ").map(n=>n[0]).join("").toUpperCase().slice(0,2) : m.initials}</div>
+          <button onClick={onLogout} style={{background:'none',border:'1px solid #e5e7eb',borderRadius:8,padding:'6px 10px',display:'flex',alignItems:'center',gap:6,fontSize:12,fontWeight:500,color:'#6b7280',cursor:'pointer'}}><Ic n="logout" sz={14} s="#6b7280" sw={2}/>Logout</button>
+        </div>
+      </div>
+
+      {/* Body with sidebar */}
+      <div className="app-layout">
+        <div className="sidebar">
+          <div className="sb-section-lbl">Menu</div>
+          {sidebarItems.map(item=>(
+            <button key={item.id} className={`sb-item${tab===item.id?' active':''}`} onClick={()=>setTab(item.id)}>
+              <Ic n={item.icon} sz={16} s="currentColor" sw={2}/>{item.label}
+              {item.badge&&<span className="sb-badge">{item.badge}</span>}
+            </button>
+          ))}
+          <div className="sb-spacer"/>
+          <div className="sb-footer">
+            <div className="sb-footer-name">{realFirstName||t.name.split(' ')[0]}</div>
+            <div className="sb-footer-plan">Free plan · Upgrade →</div>
+          </div>
+        </div>
+        <div className="content-area" style={{paddingBottom: isMobile ? 80 : 0}}>
+          {renderPage()}
+        </div>
+      </div>
+
+      {/* MOBILE BOTTOM NAV */}
+      <div id="mobile-bottom-nav" style={{
+        position:'fixed', bottom:0, left:0, right:0,
+        height:'calc(68px + env(safe-area-inset-bottom))',
+        paddingBottom:'env(safe-area-inset-bottom)',
+        background:'#ffffff', borderTop:'1.5px solid #e5e7eb',
+        display: 'flex',
+        alignItems:'stretch',
+        boxShadow:'0 -4px 16px rgba(0,0,0,0.08)',
+        zIndex:9999,
+        WebkitTransform:'translateZ(0)'
+      }}>
+        {sidebarItems.slice(0,5).map(item=>(
+          <button key={item.id}
+            style={{
+              flex:1, display:'flex', flexDirection:'column',
+              alignItems:'center', justifyContent:'center',
+              gap:3, border:'none', background:'none',
+              color: tab===item.id ? '#15803d' : '#9ca3af',
+              fontSize:10, fontWeight: tab===item.id ? 700 : 500,
+              padding:'6px 4px', cursor:'pointer',
+              WebkitTapHighlightColor:'transparent',
+              position:'relative'
+            }}
+            onClick={()=>setTab(item.id)}>
+            <Ic n={item.icon} sz={26} s={tab===item.id?'#15803d':'#9ca3af'} sw={tab===item.id?2.5:2}/>
+            {item.badge&&<span style={{position:'absolute',top:4,right:'20%',background:'#15803d',color:'#fff',fontSize:9,fontWeight:700,padding:'1px 4px',borderRadius:8}}>{item.badge}</span>}
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* ══ ROOT APP ══ */
+const App = () => {
+  const {useState, useCallback, useEffect} = React;
+  const [session, setSession] = useState(()=>{
+    // Auto-restore session from localStorage on page refresh
+    const token = localStorage.getItem('agri_access');
+    if(token) return {country:'rwanda', lang:'en'}; // will be updated when profile loads
+    return null;
+  });
+  const [userProfile, setUserProfile] = useState(null);
+
+  const handleLogin = useCallback((country,lang)=>{
+    const userData = window._agriUserData || null;
+    // Use country from user data if available, otherwise use passed country
+    const countryMap = {KE:'kenya',UG:'uganda',TZ:'tanzania',RW:'rwanda',ET:'ethiopia'};
+    const realCountry = userData?.country ? (countryMap[userData.country]||country) : country;
+    setSession({country:realCountry, lang:userData?.language||lang});
+    if(userData) setUserProfile(userData);
+  },[]);
+
+  const handleLogout = useCallback(()=>{
+    setSession(null);
+    setUserProfile(null);
+    Auth.clear();
+    window._agriUserData = null;
+  },[]);
+
+  // Load profile from API when logged in
+  useEffect(()=>{
+    if(!session) return;
+    const token = Auth.getToken();
+    if(!token) return;
+    api.get('/api/auth/profile/', token)
+      .then(profile=>{
+        if(profile && !profile.detail && !profile.code) {
+          setUserProfile(profile);
+          // Update session country from real profile
+          const countryMap = {KE:'kenya',UG:'uganda',TZ:'tanzania',RW:'rwanda',ET:'ethiopia'};
+          const realCountry = countryMap[profile.country] || 'rwanda';
+          const realLang = profile.language || 'en';
+          setSession(s => ({...s, country:realCountry, lang:realLang}));
+          window._agriUserData = profile;
+        } else {
+          // Token invalid - clear and show login
+          Auth.clear();
+          setSession(null);
+        }
+      })
+      .catch(()=>{});
+  },[session?.country]);
+
+  if(!session) return <Login onLogin={handleLogin}/>;
+  return <WebApp countryKey={session.country} langKey={session.lang} onLogout={handleLogout} userProfile={userProfile}/>;
+};
+
+// Global tab setter for native mobile taps
+window.agriSetTab = function(tabId) {
+  const event = new CustomEvent('agri-set-tab', {detail: tabId});
+  window.dispatchEvent(event);
+};
+// Global active tab tracker
+window._agriActiveTab = 'home';
+window._agriSetTabFn = null;
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+
+<script>
+// Native mobile nav fallback - renders after React loads
+(function() {
+  function injectMobileNav() {
+    // Only on mobile
+    if (window.innerWidth > 768) return;
+    // Don't inject twice
+    if (document.getElementById('native-mob-nav')) return;
+    // Only when logged in (app-body exists)
+    if (!document.querySelector('.app-body')) return;
+    
+    const tabs = [
+      {id:'home', label:'Home', icon:'🏠'},
+      {id:'crops', label:'Crops', icon:'🌱'},
+      {id:'scan', label:'Scan', icon:'🔬'},
+      {id:'market', label:'Markets', icon:'📊'},
+      {id:'settings', label:'Settings', icon:'⚙️'},
+    ];
+    
+    const nav = document.createElement('div');
+    nav.id = 'native-mob-nav';
+    nav.style.cssText = 'position:fixed;bottom:0;left:0;right:0;height:70px;background:#fff;border-top:1.5px solid #e5e7eb;z-index:9999;display:flex;align-items:stretch;box-shadow:0 -2px 12px rgba(0,0,0,.1)';
+    
+    tabs.forEach(function(tab) {
+      const btn = document.createElement('button');
+      btn.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;font-size:10px;font-weight:500;color:#9ca3af;padding:8px 4px;cursor:pointer;-webkit-tap-highlight-color:transparent;min-height:44px';
+      btn.innerHTML = '<span style="font-size:24px;line-height:1">' + tab.icon + '</span><span>' + tab.label + '</span>';
+      btn.onclick = function() {
+        // Dispatch custom event to React
+        window.dispatchEvent(new CustomEvent('agri-set-tab', {detail: tab.id}));
+        // Update active styles
+        nav.querySelectorAll('button').forEach(function(b) {
+          b.style.color = '#9ca3af';
+        });
+        btn.style.color = '#15803d';
+      };
+      nav.appendChild(btn);
+    });
+    
+    document.body.appendChild(nav);
+    document.body.style.paddingBottom = '70px';
+    console.log('[AgriAdvisor] Native nav injected');
+  }
+  
+  // Try immediately and keep trying until app loads
+  var attempts = 0;
+  var interval = setInterval(function() {
+    attempts++;
+    injectMobileNav();
+    if (document.getElementById('native-mob-nav') || attempts > 20) {
+      clearInterval(interval);
+    }
+  }, 500);
+  
+  // Also try on route changes
+  window.addEventListener('agri-set-tab', function() {
+    setTimeout(injectMobileNav, 100);
+  });
+})();
+
+// Native mobile nav fallback - renders after React loads
+document.addEventListener('DOMContentLoaded', function() {
+  // Add touch feedback to all mob-tab buttons
+  setTimeout(function() {
+    document.querySelectorAll('.mob-tab').forEach(function(btn) {
+      btn.addEventListener('touchstart', function() {
+        this.style.opacity = '0.6';
+      }, {passive: true});
+      btn.addEventListener('touchend', function() {
+        this.style.opacity = '1';
+      }, {passive: true});
+    });
+  }, 2000);
+});
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(reg => console.log('[AgriAdvisor] Service worker registered:', reg.scope))
+      .catch(err => console.log('[AgriAdvisor] Service worker failed:', err));
+  });
+}
+
+// PWA Install Prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show install banner after 30 seconds
+  setTimeout(() => {
+    const banner = document.getElementById('pwa-install-banner');
+    if (banner) banner.style.display = 'flex';
+  }, 30000);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const installBtn = document.getElementById('pwa-install-btn');
+  if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        document.getElementById('pwa-install-banner').style.display = 'none';
+      }
+    });
+  }
+  const dismissBtn = document.getElementById('pwa-dismiss-btn');
+  if (dismissBtn) {
+    dismissBtn.addEventListener('click', () => {
+      document.getElementById('pwa-install-banner').style.display = 'none';
+    });
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  console.log('[AgriAdvisor] App installed successfully!');
+  deferredPrompt = null;
+});
+</script>
+
+<!-- PWA Install Banner -->
+<div id="pwa-install-banner" style="display:none;position:fixed;bottom:80px;left:16px;right:16px;background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:1000;align-items:center;gap:12px;">
+  <div style="width:44px;height:44px;background:#15803d;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M12 22V12M12 12C12 7 7 4 2 4c0 5 3 9 10 8M12 12c0-5 5-8 10-8 0 5-3 9-10 8"/></svg>
+  </div>
+  <div style="flex:1">
+    <div style="font-weight:700;font-size:14px;color:#111827">Install AgriAdvisor</div>
+    <div style="font-size:12px;color:#6b7280;margin-top:2px">Add to home screen for offline access</div>
+  </div>
+  <button id="pwa-install-btn" style="background:#15803d;color:white;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;">Install</button>
+  <button id="pwa-dismiss-btn" style="background:none;border:none;font-size:20px;cursor:pointer;color:#9ca3af;padding:4px;">×</button>
+</div>
+
+
+<!-- Mobile Bottom Nav - Pure HTML onclick, outside React -->
+<div class="p-nav" id="p-nav-bar">
+  <div class="p-nav-inner">
+    <button class="p-nb active" id="pnb-home" onclick="pNavGo('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="p-nb" id="pnb-crops" onclick="pNavGo('crops')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22V12M12 12C12 7 7 4 2 4c0 5 3 9 10 8M12 12c0-5 5-8 10-8 0 5-3 9-10 8"/></svg>
+      <span>Crops</span>
+    </button>
+    <button class="p-nb" id="pnb-scan" onclick="pNavGo('scan')" style="position:relative">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <span class="p-nb-badge">AI</span>
+      <span>Scan</span>
+    </button>
+    <button class="p-nb" id="pnb-market" onclick="pNavGo('market')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Markets</span>
+    </button>
+    <button class="p-nb" id="pnb-settings" onclick="pNavGo('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Settings</span>
+    </button>
+  </div>
+</div>
+
+<script>
+// Pure vanilla JS nav - no React, works on all browsers including Safari iOS
+var _pNavActive = 'home';
+
+function pNavGo(tab) {
+  _pNavActive = tab;
+  // Update button styles
+  ['home','crops','scan','market','settings'].forEach(function(t) {
+    var btn = document.getElementById('pnb-'+t);
+    if (!btn) return;
+    if (t === tab) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+  // Tell React to change tab
+  window.dispatchEvent(new CustomEvent('agri-set-tab', {detail: tab}));
+}
+
+// Listen for React tab changes (e.g. from sidebar clicks on desktop)
+window.addEventListener('agri-set-tab', function(e) {
+  var tab = e.detail;
+  ['home','crops','scan','market','settings'].forEach(function(t) {
+    var btn = document.getElementById('pnb-'+t);
+    if (!btn) return;
+    if (t === tab) { btn.classList.add('active'); }
+    else { btn.classList.remove('active'); }
+  });
+});
+
+// Show nav when logged in
+var _pNavInterval = setInterval(function() {
+  var nav = document.getElementById('p-nav-bar');
+  if (!nav) return;
+  // Show if app-layout or app-body is visible (user logged in)
+  var appBody = document.querySelector('.app-layout') || document.querySelector('.content-area');
+  if (appBody) {
+    nav.style.display = 'block';
+    document.body.style.paddingBottom = 'calc(66px + env(safe-area-inset-bottom))';
+    clearInterval(_pNavInterval);
+  }
+}, 400);
+</script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+{
+  "name": "AgriAdvisor — Smart Farming for East Africa",
+  "short_name": "AgriAdvisor",
+  "description": "AI-powered crop disease detection, live market prices, and personalized farming advice in your language.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#15803d",
+  "orientation": "portrait-primary",
+  "lang": "en",
+  "categories": ["agriculture", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Crop Doctor",
+      "short_name": "Scan",
+      "description": "Scan your crops for disease",
+      "url": "/?tab=scan",
+      "icons": [{"src": "icon-192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "Market Prices",
+      "short_name": "Markets",
+      "description": "Check today's market prices",
+      "url": "/?tab=market",
+      "icons": [{"src": "icon-192.png", "sizes": "192x192"}]
+    }
+  ]
+}
