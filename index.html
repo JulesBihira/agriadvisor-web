@@ -1722,34 +1722,91 @@ const CropsPage = ({t,m,ck,realCrops,realRegion,lang}) => {
 };
 
 /* ══ MARKET PAGE ══ */
+const STATIC_MARKETS = {
+  rwanda: [
+    {name:'Kimironko Market',city:'Kigali',prices:[{crop:'Potatoes',price:480,unit:'kg',currency:'RWF',change:'+6.7%',up:true},{crop:'Beans',price:820,unit:'kg',currency:'RWF',change:'+5.1%',up:true},{crop:'Maize',price:350,unit:'kg',currency:'RWF',change:'+2.8%',up:true},{crop:'Tomatoes',price:650,unit:'kg',currency:'RWF',change:'-8.5%',up:false},{crop:'Onions',price:900,unit:'kg',currency:'RWF',change:'+5.9%',up:true}]},
+    {name:'Nyabugogo Market',city:'Kigali',prices:[{crop:'Potatoes',price:460,unit:'kg',currency:'RWF',change:'+4.5%',up:true},{crop:'Beans',price:800,unit:'kg',currency:'RWF',change:'+5.3%',up:true},{crop:'Maize',price:340,unit:'kg',currency:'RWF',change:'+3.0%',up:true}]},
+    {name:'Musanze Market',city:'Musanze',prices:[{crop:'Potatoes',price:420,unit:'kg',currency:'RWF',change:'+5.0%',up:true},{crop:'Beans',price:780,unit:'kg',currency:'RWF',change:'+3.9%',up:true},{crop:'Wheat',price:580,unit:'kg',currency:'RWF',change:'+3.6%',up:true}]},
+  ],
+  kenya: [
+    {name:'Wakulima Market',city:'Nairobi',prices:[{crop:'Dry Maize',price:52,unit:'kg',currency:'KES',change:'+3.2%',up:true},{crop:'Tomatoes',price:85,unit:'kg',currency:'KES',change:'-5.1%',up:false},{crop:'Kale',price:18,unit:'bunch',currency:'KES',change:'+1.8%',up:true}]},
+  ],
+  uganda: [
+    {name:'Owino Market',city:'Kampala',prices:[{crop:'Matoke',price:1200,unit:'bunch',currency:'UGX',change:'+2.1%',up:true},{crop:'Coffee',price:8500,unit:'kg',currency:'UGX',change:'+4.3%',up:true}]},
+  ],
+  tanzania: [
+    {name:'Kariakoo Market',city:'Dar es Salaam',prices:[{crop:'Rice',price:1850,unit:'kg',currency:'TZS',change:'+1.5%',up:true},{crop:'Cashews',price:3200,unit:'kg',currency:'TZS',change:'+6.2%',up:true}]},
+  ],
+  ethiopia: [
+    {name:'Merkato Market',city:'Addis Ababa',prices:[{crop:'Coffee',price:520,unit:'kg',currency:'ETB',change:'+5.1%',up:true},{crop:'Teff',price:85,unit:'kg',currency:'ETB',change:'+2.3%',up:true}]},
+  ],
+};
+
 const MarketPage = ({t,m,ck,realRegion}) => {
-  const markets = {
-    rwanda: [
-      {name:'Kimironko Market',city:'Kigali',prices:[{crop:'Potatoes',price:480,unit:'kg',currency:'RWF',change:'+6.7%',up:true},{crop:'Beans',price:820,unit:'kg',currency:'RWF',change:'+5.1%',up:true},{crop:'Maize',price:350,unit:'kg',currency:'RWF',change:'+2.8%',up:true},{crop:'Tomatoes',price:650,unit:'kg',currency:'RWF',change:'-8.5%',up:false},{crop:'Onions',price:900,unit:'kg',currency:'RWF',change:'+5.9%',up:true}]},
-      {name:'Nyabugogo Market',city:'Kigali',prices:[{crop:'Potatoes',price:460,unit:'kg',currency:'RWF',change:'+4.5%',up:true},{crop:'Beans',price:800,unit:'kg',currency:'RWF',change:'+5.3%',up:true},{crop:'Maize',price:340,unit:'kg',currency:'RWF',change:'+3.0%',up:true}]},
-      {name:'Musanze Market',city:'Musanze',prices:[{crop:'Potatoes',price:420,unit:'kg',currency:'RWF',change:'+5.0%',up:true},{crop:'Beans',price:780,unit:'kg',currency:'RWF',change:'+3.9%',up:true},{crop:'Wheat',price:580,unit:'kg',currency:'RWF',change:'+3.6%',up:true}]},
-    ],
-    kenya: [
-      {name:'Wakulima Market',city:'Nairobi',prices:[{crop:'Dry Maize',price:52,unit:'kg',currency:'KES',change:'+3.2%',up:true},{crop:'Tomatoes',price:85,unit:'kg',currency:'KES',change:'-5.1%',up:false},{crop:'Kale',price:18,unit:'bunch',currency:'KES',change:'+1.8%',up:true}]},
-    ],
-    uganda: [
-      {name:'Owino Market',city:'Kampala',prices:[{crop:'Matoke',price:1200,unit:'bunch',currency:'UGX',change:'+2.1%',up:true},{crop:'Coffee',price:8500,unit:'kg',currency:'UGX',change:'+4.3%',up:true}]},
-    ],
-    tanzania: [
-      {name:'Kariakoo Market',city:'Dar es Salaam',prices:[{crop:'Rice',price:1850,unit:'kg',currency:'TZS',change:'+1.5%',up:true},{crop:'Cashews',price:3200,unit:'kg',currency:'TZS',change:'+6.2%',up:true}]},
-    ],
-    ethiopia: [
-      {name:'Merkato Market',city:'Addis Ababa',prices:[{crop:'Coffee',price:520,unit:'kg',currency:'ETB',change:'+5.1%',up:true},{crop:'Teff',price:85,unit:'kg',currency:'ETB',change:'+2.3%',up:true}]},
-    ],
+  const {useState,useEffect} = React;
+  const [marketData, setMarketData] = useState(STATIC_MARKETS[ck]||STATIC_MARKETS.rwanda);
+  const [isLive, setIsLive] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(()=>{
+    const token = Auth.getToken();
+    if(!token){setLoading(false);return;}
+    fetch(`${API_BASE}/api/market/prices/?country=${ck}`,{
+      headers:{'Authorization':`Bearer ${token}`}
+    })
+    .then(r=>{
+      if(!r.ok) throw new Error('status '+r.status);
+      return r.json();
+    })
+    .then(data=>{
+      // Accept array or {markets:[...], last_updated:...}
+      const arr = Array.isArray(data) ? data : (data.markets||data.results||null);
+      if(arr && arr.length > 0){
+        // Normalise price entries: backend may use price_per_unit, crop_name etc.
+        const normalised = arr.map(mkt=>({
+          name: mkt.name||mkt.market_name||'Market',
+          city: mkt.city||mkt.location||'',
+          prices: (mkt.prices||mkt.items||[]).map(p=>({
+            crop: p.crop||p.crop_name||p.commodity||p.name||'',
+            price: parseFloat(p.price||p.price_per_unit||p.amount||0),
+            unit: p.unit||p.unit_of_measure||'kg',
+            currency: p.currency||(m&&m.currency)||'RWF',
+            change: p.change||p.price_change||'',
+            up: p.up!==undefined ? p.up : (p.price_change||p.change||'').startsWith('+'),
+          }))
+        }));
+        setMarketData(normalised);
+        setIsLive(true);
+        setLastUpdated(data.last_updated||null);
+      }
+      setLoading(false);
+    })
+    .catch(()=>{
+      // silently fall back to static data
+      setError('live');
+      setLoading(false);
+    });
+  },[ck]);
+
+  const fmtDate = (iso) => {
+    if(!iso) return new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+    return new Date(iso).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
   };
-  const countryMarkets = markets[ck] || markets.rwanda;
+
   return (
     <div className="fade-up">
       <div className="page-header">
         <div className="page-title">📊 Market Prices</div>
-        <div className="page-sub">{realRegion} · Updated today</div>
+        <div className="page-sub" style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+          <span>{realRegion}</span>
+          {loading && <span style={{fontSize:11,background:'#f3f4f6',color:'#6b7280',borderRadius:20,padding:'2px 8px'}}>⏳ Loading…</span>}
+          {!loading && isLive && <span style={{fontSize:11,background:'#dcfce7',color:'#15803d',borderRadius:20,padding:'2px 8px',fontWeight:600}}>🟢 Live</span>}
+          {!loading && !isLive && <span style={{fontSize:11,background:'#fef3c7',color:'#92400e',borderRadius:20,padding:'2px 8px'}}>📋 Reference</span>}
+        </div>
       </div>
-      {countryMarkets.map((market,mi)=>(
+      {marketData.map((market,mi)=>(
         <div key={mi} className="card" style={{marginBottom:16}}>
           <div className="card-header">
             <div className="card-title">🏪 {market.name}</div>
@@ -1758,15 +1815,17 @@ const MarketPage = ({t,m,ck,realRegion}) => {
           <table style={{width:'100%',borderCollapse:'collapse'}}>
             <thead><tr style={{borderBottom:'1px solid #f3f4f6'}}>
               <th style={{textAlign:'left',padding:'8px 12px',fontSize:12,color:'#6b7280',fontWeight:600}}>Crop</th>
-              <th style={{textAlign:'right',padding:'8px 12px',fontSize:12,color:'#6b7280',fontWeight:600}}>Price / {'{'}unit{'}'}</th>
+              <th style={{textAlign:'right',padding:'8px 12px',fontSize:12,color:'#6b7280',fontWeight:600}}>Price</th>
               <th style={{textAlign:'right',padding:'8px 12px',fontSize:12,color:'#6b7280',fontWeight:600}}>Change</th>
             </tr></thead>
             <tbody>
             {market.prices.map((p,pi)=>(
               <tr key={pi} style={{borderBottom:'1px solid #f9fafb'}}>
                 <td style={{padding:'10px 12px',fontSize:14,fontWeight:500}}>{p.crop}</td>
-                <td style={{padding:'10px 12px',textAlign:'right',fontSize:14,fontWeight:600}}>{p.currency} {p.price.toLocaleString()}<span style={{fontSize:11,color:'#9ca3af',fontWeight:400}}>/{p.unit}</span></td>
-                <td style={{padding:'10px 12px',textAlign:'right'}}><span style={{fontSize:12,fontWeight:600,color:p.up?'#16a34a':'#dc2626'}}>{p.up?'↑':'↓'} {p.change}</span></td>
+                <td style={{padding:'10px 12px',textAlign:'right',fontSize:14,fontWeight:600}}>{p.currency} {Number(p.price).toLocaleString()}<span style={{fontSize:11,color:'#9ca3af',fontWeight:400}}>/{p.unit}</span></td>
+                <td style={{padding:'10px 12px',textAlign:'right'}}>
+                  {p.change ? <span style={{fontSize:12,fontWeight:600,color:p.up?'#16a34a':'#dc2626'}}>{p.up?'↑':'↓'} {p.change}</span> : <span style={{fontSize:12,color:'#d1d5db'}}>—</span>}
+                </td>
               </tr>
             ))}
             </tbody>
@@ -1774,7 +1833,7 @@ const MarketPage = ({t,m,ck,realRegion}) => {
         </div>
       ))}
       <div style={{fontSize:12,color:'#9ca3af',textAlign:'center',padding:'8px'}}>
-        Prices sourced from physical market visits · Last updated: {new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}
+        {isLive ? `Live prices from AgriAdvisor network · Updated: ${fmtDate(lastUpdated)}` : 'Reference prices from recent market visits · Prices update when backend data is available'}
       </div>
     </div>
   );
