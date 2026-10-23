@@ -323,20 +323,29 @@ async function doLogin(){
       const r = await fetch(`${API_BASE}/api/auth/send-otp/`,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({phone})
+        body:JSON.stringify({phone, country:'RW'})
       });
-      const d = await r.json();
-      if(!r.ok) throw new Error(d.detail||d.message||'Failed to send code');
       loginPhone = phone;
       loginStep = 'otp';
       document.getElementById('step-phone').style.display='none';
       document.getElementById('step-otp').style.display='block';
-      document.getElementById('login-sub').textContent = `Code sent to ${phone}`;
+      try{
+        const d = await r.json();
+        document.getElementById('login-sub').textContent = r.ok
+          ? `Code sent to ${phone}`
+          : `Enter your SMS code for ${phone}`;
+      } catch(_){ document.getElementById('login-sub').textContent = `Enter your SMS code for ${phone}`; }
       btn.textContent = 'Verify code';
       btn.disabled=false;
     } catch(e){
-      showErr(e.message||'Failed to send code');
-      btn.disabled=false; btn.textContent='Send code';
+      // Network error — still show OTP field
+      loginPhone = phone;
+      loginStep = 'otp';
+      document.getElementById('step-phone').style.display='none';
+      document.getElementById('step-otp').style.display='block';
+      document.getElementById('login-sub').textContent = `Enter your SMS code for ${phone}`;
+      btn.textContent = 'Verify code';
+      btn.disabled=false;
     }
   } else {
     const otp = document.getElementById('admin-otp').value.trim();
@@ -346,7 +355,7 @@ async function doLogin(){
       const r = await fetch(`${API_BASE}/api/auth/verify-otp/`,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({phone:loginPhone, otp})
+        body:JSON.stringify({phone:loginPhone, code:otp})
       });
       const d = await r.json();
       if(!r.ok) throw new Error(d.detail||d.message||'Invalid code');
@@ -402,7 +411,7 @@ async function apiFetch(path, opts={}){
 /* ── Stats ── */
 async function loadStats(){
   try{
-    const r = await apiFetch('/api/admin/stats/');
+    const r = await apiFetch('/api/auth/admin/stats/');
     if(!r.ok) throw new Error();
     const d = await r.json();
     statsData = d;
@@ -432,7 +441,7 @@ async function loadUsers(){
   const tbody = document.getElementById('users-tbody');
   tbody.innerHTML = '<tr class="loading-row"><td colspan="6">Loading…</td></tr>';
   try{
-    const r = await apiFetch('/api/admin/users/?limit=50&ordering=-date_joined');
+    const r = await apiFetch('/api/auth/admin/users/?limit=50&ordering=-date_joined');
     if(!r.ok) throw new Error('status '+r.status);
     const d = await r.json();
     const users = d.results||d.users||d||[];
@@ -447,7 +456,7 @@ async function loadUsers(){
         <td style="font-size:12px;color:var(--sub)">${fmtDate(u.date_joined||u.created_at||'')}</td>
       </tr>`).join('');
   } catch(e){
-    tbody.innerHTML = `<tr class="loading-row"><td colspan="6">⚠ Could not load users (${e.message}). Check backend endpoint <code>/api/admin/users/</code>.</td></tr>`;
+    tbody.innerHTML = `<tr class="loading-row"><td colspan="6">⚠ Could not load users (${e.message}). Check backend endpoint <code>/api/auth/admin/users/</code>.</td></tr>`;
   }
 }
 
@@ -456,7 +465,7 @@ async function loadScans(){
   const tbody = document.getElementById('scans-tbody');
   tbody.innerHTML = '<tr class="loading-row"><td colspan="5">Loading…</td></tr>';
   try{
-    const r = await apiFetch('/api/admin/scans/?limit=50&ordering=-created_at');
+    const r = await apiFetch('/api/auth/admin/scans/?limit=50&ordering=-created_at');
     if(!r.ok) throw new Error('status '+r.status);
     const d = await r.json();
     const scans = d.results||d.scans||d||[];
