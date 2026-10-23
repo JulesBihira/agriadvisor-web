@@ -2050,7 +2050,7 @@ const PlansPage = ({t,m,ck}) => (
 );
 
 /* ══ SETTINGS PAGE ══ */
-const SettingsPage = ({t,m,ck,lang,setLang,realName,realFirstName,realCrops,realFarm,realRegion}) => {
+const SettingsPage = ({t,m,ck,lang,setLang,realName,realFirstName,realCrops,realFarm,realRegion,onLogout}) => {
   const [activeNav,setActiveNav]=useState('profile');
   const [toggles,setToggles]=useState({sms:true,email:false,pest:true,weather:true,price:false});
   const [editing,setEditing]=useState(false);
@@ -2166,19 +2166,34 @@ const SettingsPage = ({t,m,ck,lang,setLang,realName,realFirstName,realCrops,real
           )}
           {activeNav==='subscription'&&(
             <div>
-              <div style={{background:'var(--green-light)',border:'1px solid var(--green-mid)',borderRadius:14,padding:20,marginBottom:20}}>
-                <div style={{fontSize:12,fontWeight:700,color:'var(--green-dark)',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:4}}>Current plan</div>
-                <div style={{fontFamily:'var(--font-display)',fontSize:22,fontWeight:500,color:'var(--green-deep)'}}>Free plan</div>
-                <div style={{fontSize:13,color:'var(--green-dark)',marginTop:4}}>3 scans/month · Basic features</div>
-                <button style={{marginTop:14,padding:'9px 20px',background:'var(--green)',border:'none',borderRadius:10,fontSize:13,fontWeight:700,color:'#fff',cursor:'pointer'}}>Upgrade to Pro →</button>
+              <div className="pay-note" style={{marginBottom:20}}>
+                <Ic n="card" sz={18} s="#1d4ed8" sw={2}/>
+                <p><strong>{m.pay}:</strong> {t.ui.payNote} {m.pay} {t.ui.payNote2}</p>
               </div>
-              <div className="sp-section">
-                <div className="sp-section-title">Payment method</div>
-                <div className="sp-row"><div><div className="sp-row-label">{m.pay}</div><div className="sp-row-sub">Mobile money · {ck.charAt(0).toUpperCase()+ck.slice(1)}</div></div><div className="badge bg">Active</div></div>
+              <div className="plans-grid">
+                {t.tiers.map((tr,i)=>(
+                  <div key={i} className={`plan-card${i===1?' featured':''}`}>
+                    {tr.pt&&<div className="plan-pop">{tr.pt}</div>}
+                    <div className="plan-name">{tr.n}</div>
+                    <div className="plan-price">{tr.p}<span>{t.ui.pm}</span></div>
+                    <div className="plan-features">
+                      {tr.f.map((f,j)=><div key={j} className="pf-row"><div className="pf-check"><Ic n="check" sz={10} s="#15803d" sw={2.5}/></div><span className="pf-on">{f}</span></div>)}
+                      {tr.lk.map((f,j)=><div key={j} className="pf-row"><div className="pf-x"><Ic n="x" sz={10} s="#9ca3af" sw={2.5}/></div><span className="pf-off">{f}</span></div>)}
+                    </div>
+                    <button className={`plan-btn ${i===1?'plan-btn-pri':'plan-btn-sec'}`}>{tr.pb}</button>
+                  </div>
+                ))}
               </div>
             </div>
           )}
         </div>
+      </div>
+      {/* Logout button — always visible, important on mobile where top-nav is hidden */}
+      <div style={{marginTop:28,paddingBottom:8}}>
+        <button onClick={onLogout} style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,width:'100%',padding:'13px',borderRadius:12,border:'1.5px solid #fee2e2',background:'#fff5f5',fontSize:14,fontWeight:700,color:'#dc2626',cursor:'pointer'}}>
+          <Ic n="logout" sz={17} s="#dc2626" sw={2}/>
+          Log out
+        </button>
       </div>
     </div>
   );
@@ -2248,7 +2263,7 @@ const WebApp = ({countryKey, langKey, onLogout, userProfile}) => {
   ];
 
   const renderPage = () => {
-    const props = {t,m,ck:countryKey,lang,setLang,lcode,realName,realFirstName,realRegion,realFarm,realCrops};
+    const props = {t,m,ck:countryKey,lang,setLang,lcode,realName,realFirstName,realRegion,realFarm,realCrops,onLogout};
     switch(tab){
       case 'home':     return <Dashboard {...props}/>;
       case 'crops':    return <CropsPage {...props}/>;
@@ -2486,12 +2501,12 @@ document.addEventListener('DOMContentLoaded', function() {
   }, 2000);
 });
 
-// Register Service Worker
-if ('serviceWorker' in navigator) {
+// Register Service Worker (HTTPS only — won't run on file:// or http://)
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js')
       .then(reg => console.log('[AgriAdvisor] Service worker registered:', reg.scope))
-      .catch(err => console.log('[AgriAdvisor] Service worker failed:', err));
+      .catch(err => console.log('[AgriAdvisor] Service worker skipped:', err.message));
   });
 }
 
