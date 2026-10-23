@@ -2057,7 +2057,7 @@ const SettingsPage = ({t,m,ck,lang,setLang,realName,realFirstName,realCrops,real
   const [saving,setSaving]=useState(false);
   const [saveMsg,setSaveMsg]=useState('');
   const [editForm,setEditForm]=useState({full_name:realName||'',district:realRegion||''});
-  const lcode=LANGS[ck].code;
+  const sLcode=LANGS[ck].code;
 
   const handleSaveProfile = async () => {
     setSaving(true); setSaveMsg('');
@@ -2153,7 +2153,7 @@ const SettingsPage = ({t,m,ck,lang,setLang,realName,realFirstName,realCrops,real
               <div className="sp-section">
                 <div className="sp-section-title">Display language</div>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginTop:8}}>
-                  {[{code:'en',name:'English',sub:'International'},{code:lcode,name:LANGS[ck].localName,sub:ck.charAt(0).toUpperCase()+ck.slice(1)}].map(l=>(
+                  {[{code:'en',name:'English',sub:'International'},{code:sLcode,name:LANGS[ck].localName,sub:ck.charAt(0).toUpperCase()+ck.slice(1)}].map(l=>(
                     <div key={l.code} onClick={()=>setLang(l.code)} style={{border:`1.5px solid ${lang===l.code?'var(--green)':'#e5e7eb'}`,borderRadius:12,padding:14,cursor:'pointer',background:lang===l.code?'#f0fdf4':'#fff'}}>
                       <div style={{fontSize:13,fontWeight:700,color:'#1a1a1a'}}>{l.name}</div>
                       <div style={{fontSize:11,color:'#6b7280',marginTop:2}}>{l.sub}</div>
