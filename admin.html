@@ -117,16 +117,16 @@ tr:hover td{background:#f9fafb}
       </div>
     </div>
     <div class="login-title">Admin sign in</div>
-    <div class="login-sub">Staff access only — use your admin credentials</div>
-    <div class="form-group">
-      <label for="admin-email">Phone number</label>
-      <input type="tel" id="admin-email" placeholder="+250788831713" autocomplete="tel">
+    <div class="login-sub" id="login-sub">Enter your phone number to receive a code</div>
+    <div class="form-group" id="step-phone">
+      <label for="admin-phone">Phone number</label>
+      <input type="tel" id="admin-phone" placeholder="+250788831713" autocomplete="tel">
     </div>
-    <div class="form-group">
-      <label for="admin-pass">Password</label>
-      <input type="password" id="admin-pass" placeholder="••••••••" autocomplete="current-password">
+    <div class="form-group" id="step-otp" style="display:none">
+      <label for="admin-otp">SMS code</label>
+      <input type="text" id="admin-otp" placeholder="123456" inputmode="numeric" maxlength="6">
     </div>
-    <button class="btn-primary" id="login-btn" onclick="doLogin()">Sign in</button>
+    <button class="btn-primary" id="login-btn" onclick="doLogin()">Send code</button>
     <div class="login-err" id="login-err"></div>
   </div>
 </div>
@@ -307,33 +307,60 @@ let adminToken = null;
 let statsData = null;
 
 /* ── Auth ── */
+let loginPhone = '';
+let loginStep = 'phone'; // 'phone' or 'otp'
+
 async function doLogin(){
-  const email = document.getElementById('admin-email').value.trim();
-  const pass  = document.getElementById('admin-pass').value;
-  const btn   = document.getElementById('login-btn');
-  const err   = document.getElementById('login-err');
-  if(!email||!pass){showErr('Please enter phone and password');return;}
-  btn.disabled = true; btn.textContent = 'Signing in…';
+  const btn = document.getElementById('login-btn');
+  const err = document.getElementById('login-err');
   err.style.display='none';
-  try{
-    const r = await fetch(`${API_BASE}/api/auth/login/`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({phone:email,password:pass})
-    });
-    const d = await r.json();
-    if(!r.ok) throw new Error(d.detail||d.non_field_errors||'Login failed');
-    // Require is_staff / is_admin flag
-    if(d.is_staff===false) throw new Error('Access denied — admin account required');
-    adminToken = d.token||d.access||d.key||null;
-    if(!adminToken) throw new Error('No token received');
-    sessionStorage.setItem('agri_admin_token', adminToken);
-    sessionStorage.setItem('agri_admin_email', email);
-    showApp(email);
-  } catch(e){
-    showErr(e.message||'Login failed');
+
+  if(loginStep === 'phone'){
+    const phone = document.getElementById('admin-phone').value.trim();
+    if(!phone){showErr('Please enter your phone number');return;}
+    btn.disabled=true; btn.textContent='Sending…';
+    try{
+      const r = await fetch(`${API_BASE}/api/auth/send-otp/`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({phone})
+      });
+      const d = await r.json();
+      if(!r.ok) throw new Error(d.detail||d.message||'Failed to send code');
+      loginPhone = phone;
+      loginStep = 'otp';
+      document.getElementById('step-phone').style.display='none';
+      document.getElementById('step-otp').style.display='block';
+      document.getElementById('login-sub').textContent = `Code sent to ${phone}`;
+      btn.textContent = 'Verify code';
+      btn.disabled=false;
+    } catch(e){
+      showErr(e.message||'Failed to send code');
+      btn.disabled=false; btn.textContent='Send code';
+    }
+  } else {
+    const otp = document.getElementById('admin-otp').value.trim();
+    if(!otp){showErr('Please enter the SMS code');return;}
+    btn.disabled=true; btn.textContent='Verifying…';
+    try{
+      const r = await fetch(`${API_BASE}/api/auth/verify-otp/`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({phone:loginPhone, otp})
+      });
+      const d = await r.json();
+      if(!r.ok) throw new Error(d.detail||d.message||'Invalid code');
+      adminToken = d.access||d.token||d.key||null;
+      if(!adminToken) throw new Error('No token received');
+      if(d.is_staff===false) throw new Error('Access denied — admin account required');
+      sessionStorage.setItem('agri_admin_token', adminToken);
+      sessionStorage.setItem('agri_admin_email', loginPhone);
+      showApp(loginPhone);
+    } catch(e){
+      showErr(e.message||'Verification failed');
+      btn.disabled=false; btn.textContent='Verify code';
+    }
   }
-  btn.disabled=false; btn.textContent='Sign in';
 }
 
 function showErr(msg){
@@ -570,8 +597,8 @@ const savedEmail = sessionStorage.getItem('agri_admin_email');
 if(savedToken){adminToken=savedToken;showApp(savedEmail||'Admin');}
 
 // Allow Enter key on login
-document.getElementById('admin-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-document.getElementById('admin-email').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('admin-phone').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('admin-otp').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 </script>
 </body>
 </html>
