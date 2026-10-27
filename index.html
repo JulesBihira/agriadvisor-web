@@ -1891,26 +1891,11 @@ const ScanPage = ({t,m,ck,realCrops}) => {
       setResult(data);
       setScanHistory(h=>[{file:previewUrl,crop:selectedCrop||'Unknown',result:data,date:new Date().toLocaleDateString()}, ...h.slice(0,9)]);
       setStage('result');
-    } catch(e) {
-      // Fallback: show demo result if API not available
-      setResult({
-        disease_raw: 'early blight',
-        confidence: 0.87,
-        disease: {
-          name: 'Early Blight',
-          scientific: 'Alternaria solani',
-          description: 'A common fungal disease affecting tomatoes and potatoes. Appears as dark brown spots with concentric rings.',
-          symptoms: 'Dark brown spots with yellow halos on lower leaves. Spots have target-board appearance.',
-          treatments: [
-            {name:'Copper Fungicide',type:'chemical',description:'Apply copper oxychloride 50WP at 2.5g/L every 7 days.',products:['Ridomil Gold','Copper Oxychloride 50WP']},
-            {name:'Remove Affected Leaves',type:'cultural',description:'Remove and destroy all infected plant material immediately.',products:[]},
-            {name:'Improve Spacing',type:'cultural',description:'Ensure proper spacing for air circulation. Avoid overhead irrigation.',products:[]}
-          ]
-        },
-        scans_remaining: 2,
-        status: 'complete'
-      });
-      setStage('result');
+        } catch(e) {
+      setErrorMsg(e.message && e.message !== 'Failed to fetch'
+        ? e.message
+        : 'Could not analyse the photo right now. Please check your connection and try again.');
+      setStage('error');
     }
   };
 
