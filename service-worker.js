@@ -1,5 +1,5 @@
 const CACHE_NAME = 'agriadvisor-v1';
-const STATIC_CACHE = 'agriadvisor-static-v1';
+const STATIC_CACHE = 'agriadvisor-static-v2';
 const API_CACHE = 'agriadvisor-api-v1';
 
 // Files to cache for offline use
@@ -88,6 +88,32 @@ self.addEventListener('fetch', event => {
           });
         })
     );
+    return;
+  }
+
+  // App page - network first (so updates reach phones), cached copy if the
+  // network is slower than 4 seconds or offline.
+  if (event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+    const network = fetch(event.request).then(response => {
+      if (response.ok) {
+        const clone = response.clone();
+        caches.open(STATIC_CACHE).then(cache => cache.put(event.request, clone));
+      }
+      return response;
+    });
+    event.waitUntil(network.catch(() => {}));
+    event.respondWith(new Promise(resolve => {
+      let done = false;
+      const fromCache = () => caches.match(event.request).then(c => c || caches.match('/index.html'));
+      const timer = setTimeout(() => {
+        fromCache().then(c => { if (c && !done) { done = true; resolve(c); } });
+      }, 4000);
+      network.then(r => { if (!done) { done = true; clearTimeout(timer); resolve(r); } })
+        .catch(() => {
+          clearTimeout(timer);
+          fromCache().then(c => { if (!done) { done = true; resolve(c || Response.error()); } });
+        });
+    }));
     return;
   }
 
