@@ -1,6 +1,6 @@
 const CACHE_NAME = 'agriadvisor-v1';
 const STATIC_CACHE = 'agriadvisor-static-v2';
-const API_CACHE = 'agriadvisor-api-v1';
+const API_CACHE = 'agriadvisor-api-v2';
 
 // Files to cache for offline use
 const STATIC_FILES = [
@@ -13,10 +13,9 @@ const STATIC_FILES = [
 
 // API endpoints to cache
 const CACHE_API_PATTERNS = [
-  '/api/markets/prices/',
+  '/api/market/prices/',
   '/api/weather/current/',
   '/api/planting/calendar/',
-  '/api/auth/profile/',
 ];
 
 // Install — cache static files

@@ -937,18 +937,75 @@ const FarmProfileStep = ({country, onComplete, onBack, loading}) => {
 const API_BASE = 'https://agriadvisor-production.up.railway.app';
 // Note: api.agriadvisor.co points to the same server once DNS propagates
 
-const api = {
-  async post(endpoint, data, token=null) {
-    const headers = {'Content-Type':'application/json'};
-    if(token) headers['Authorization'] = `Bearer ${token}`;
+// Token storage. The access token lasts 1 hour; the refresh token lasts 30 days
+// and is used to renew the access token automatically, so farmers stay logged in.
+const Auth = {
+  saveTokens(access, refresh) {
     try {
-      const res = await fetch(`${API_BASE}${endpoint}`, {
-        method:'POST', headers, body:JSON.stringify(data)
-      });
+      localStorage.setItem('agri_access', access);
+      if(refresh) localStorage.setItem('agri_refresh', refresh);
+    } catch(e) {}
+  },
+  getToken() { try { return localStorage.getItem('agri_access'); } catch(e) { return null; } },
+  getRefresh() { try { return localStorage.getItem('agri_refresh'); } catch(e) { return null; } },
+  clear() {
+    try { ['agri_access','agri_refresh','agri_profile','agri_pending_profile'].forEach(k => localStorage.removeItem(k)); } catch(e) {}
+  },
+  // Returns true (renewed), false (refresh token rejected: must log in again) or null (no network).
+  _pending: null,
+  refresh() {
+    if(Auth._pending) return Auth._pending;
+    const rt = Auth.getRefresh();
+    if(!rt) return Promise.resolve(false);
+    Auth._pending = fetch(`${API_BASE}/api/auth/refresh/`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({refresh: rt})
+    }).then(async r => {
+      if(!r.ok) return false;
+      const d = await r.json();
+      if(!d.access) return false;
+      Auth.saveTokens(d.access, d.refresh);
+      return true;
+    }).catch(() => null).finally(() => { Auth._pending = null; });
+    return Auth._pending;
+  }
+};
+
+// fetch() that adds the login token and renews it automatically when it has expired
+const authFetch = async (path, opts = {}, useAuth = true) => {
+  const url = path.startsWith('http') ? path : `${API_BASE}${path}`;
+  const run = () => {
+    const headers = {...(opts.headers || {})};
+    const tk = useAuth ? Auth.getToken() : null;
+    if(tk) headers['Authorization'] = `Bearer ${tk}`;
+    return fetch(url, {...opts, headers});
+  };
+  let res = await run();
+  if(useAuth && res.status === 401 && Auth.getRefresh()){
+    const renewed = await Auth.refresh();
+    if(renewed) res = await run();
+    else if(renewed === false) window.dispatchEvent(new Event('agri-logout'));
+  }
+  return res;
+};
+
+const _withStatus = (json, status) => {
+  if(json && typeof json === 'object' && !Array.isArray(json)) {
+    try { Object.defineProperty(json, '_status', {value: status}); } catch(e) {}
+  }
+  return json;
+};
+
+const api = {
+  // token argument: pass any truthy value for calls that need the user to be logged in
+  async post(endpoint, data, token=null) {
+    try {
+      const res = await authFetch(endpoint, {
+        method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
+      }, !!token);
       const text = await res.text();
       let json;
-      try { json = JSON.parse(text); } catch(e) { 
-        throw new Error('Server error. Please try again.'); 
+      try { json = JSON.parse(text); } catch(e) {
+        throw new Error('Server error. Please try again.');
       }
       if(!res.ok) throw new Error(json.detail || json.error || 'Request failed');
       return json;
@@ -957,13 +1014,11 @@ const api = {
       throw e;
     }
   },
-  async put(endpoint, data, token) {
+  async put(endpoint, data, token=true) {
     try {
-      const res = await fetch(`${API_BASE}${endpoint}`, {
-        method:'PUT',
-        headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
-        body:JSON.stringify(data)
-      });
+      const res = await authFetch(endpoint, {
+        method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
+      }, true);
       const text = await res.text();
       let json;
       try { json = JSON.parse(text); } catch(e) { throw new Error('Server error.'); }
@@ -974,26 +1029,56 @@ const api = {
       throw e;
     }
   },
-  async get(endpoint, token) {
+  async get(endpoint, token=true) {
     try {
-      const res = await fetch(`${API_BASE}${endpoint}`, {
-        headers:{'Authorization':`Bearer ${token}`}
-      });
+      const res = await authFetch(endpoint, {}, true);
       const text = await res.text();
-      try { return JSON.parse(text); } catch(e) { return {}; }
-    } catch(e) { return {}; }
+      try { return _withStatus(JSON.parse(text), res.status); } catch(e) { return _withStatus({}, res.status); }
+    } catch(e) { return {_networkError: true}; }
   }
 };
 
-// Token storage
-const Auth = {
-  saveTokens(access, refresh) {
-    localStorage.setItem('agri_access', access);
-    localStorage.setItem('agri_refresh', refresh);
-  },
-  getToken() { return localStorage.getItem('agri_access'); },
-  clear() { localStorage.removeItem('agri_access'); localStorage.removeItem('agri_refresh'); }
+// ── Small helpers used across pages ──
+const fmtFarmSize = (v) => {
+  const n = parseFloat(v);
+  return isNaN(n) || n <= 0 ? '' : `${Number(n.toFixed(2))} ha`;
 };
+const timeAgo = (iso) => {
+  if(!iso) return '';
+  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  if(s < 3600) return `${Math.max(1, Math.round(s/60))} min ago`;
+  if(s < 86400) return `${Math.round(s/3600)} h ago`;
+  if(s < 172800) return 'Yesterday';
+  return new Date(iso).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+};
+const PLAN_NAMES = {free:'Free plan', pro:'Farmer Pro', business:'Agribusiness'};
+// What the server says about this account's plan and scans
+const planInfo = (p) => {
+  const plan = (p && p.is_pro) ? (p.plan || 'pro') : 'free';
+  const until = p && p.plan_expires_at && plan !== 'free'
+    ? new Date(p.plan_expires_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
+  const unlimited = !!(p && p.is_pro);
+  const left = p && typeof p.scans_remaining === 'number' ? p.scans_remaining : null;
+  return {plan, name: PLAN_NAMES[plan] || 'Free plan', until, unlimited, scansLeft: unlimited ? null : left,
+          scansUsed: unlimited || left === null ? null : Math.max(0, 3 - left)};
+};
+// Crop planting dates are kept on this phone, separately for each account
+const cropDatesKey = (uid) => `agri_crop_dates_${uid || 'guest'}`;
+const loadCropDates = (uid) => {
+  try {
+    const own = localStorage.getItem(cropDatesKey(uid));
+    if(own) return JSON.parse(own);
+    // One-time move of dates saved before they were kept per account
+    const legacy = localStorage.getItem('agri_crop_dates');
+    if(legacy && uid){
+      localStorage.setItem(cropDatesKey(uid), legacy);
+      localStorage.removeItem('agri_crop_dates');
+      return JSON.parse(legacy);
+    }
+  } catch(e) {}
+  return {};
+};
+const saveCropDates = (uid, dates) => { try { localStorage.setItem(cropDatesKey(uid), JSON.stringify(dates)); } catch(e) {} };
 
 
 /* ══ OTP TIMER ══ */
@@ -1076,7 +1161,7 @@ const Login = ({onLogin}) => {
       // Check if this is login vs signup
       if(!window._agriIsSignup && res.is_new_user) {
         // Login attempt with unregistered number - show error
-        setError('No account found for this number. Please create one free.');
+        Auth.clear(); window._agriUserData = null; setError('No account found for this number. Please create one free.');
         setStep(0);
         return;
       }
@@ -1374,14 +1459,21 @@ const Login = ({onLogin}) => {
                   profile: {
                     farm_size: farmData.farm_size,
                     district: farmData.district,
+                    region: farmData.province || '',
                     main_crops: farmData.main_crops,
                   }
                 };
-                try {
-                  if(token) await api.put('/api/auth/profile/', profileData, token);
-                } catch(err) {
-                  console.log('Profile save error:', err.message);
+                let profileSaved = false;
+                for(let attempt = 0; attempt < 2 && !profileSaved; attempt++){
+                  try {
+                    if(token){ const saved = await api.put('/api/auth/profile/', profileData, token); if(saved && saved.id) window._agriUserData = saved; profileSaved = true; }
+                  } catch(err) {
+                    console.log('Profile save error:', err.message);
+                    if(attempt === 0) await new Promise(r=>setTimeout(r,1500));
+                  }
                 }
+                // Weak connection: keep the farm details and send them as soon as the app is online
+                if(!profileSaved){ try { localStorage.setItem('agri_pending_profile', JSON.stringify(profileData)); } catch(e) {} }
                 setLoading(false);
                 const countryMap = {ke:'kenya',ug:'uganda',tz:'tanzania',rw:'rwanda',et:'ethiopia'};
                 const userCountry = window._agriUserData?.country?.toLowerCase()||'ke';
@@ -1460,16 +1552,23 @@ const CropDateEditor = ({crop, saved, onSave, onCancel}) => {
   };
 
 /* ══ DASHBOARD ══ */
-const Dashboard = ({t,m,ck,realFirstName,realRegion,realFarm,realCrops,lang,setLang,lcode}) => {
-  const [editingCrop, setEditingCrop] = React.useState(null);
-  const [cropDates, setCropDates] = React.useState(() => {
-    try { return JSON.parse(localStorage.getItem('agri_crop_dates')||'{}'); } catch{ return {}; }
-  });
+const greetingFor = (lang, fallback) => {
+  const h = new Date().getHours();
+  if(lang === 'en') return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  if(lang === 'rw') return h < 12 ? 'Mwaramutse' : 'Mwiriwe';
+  return fallback;
+};
+
+const Dashboard = ({t,m,ck,lang,profile,uid,realFirstName,realRegion,realDistrict,realFarm,realCrops,alerts,goTo}) => {
+  const {useState, useEffect} = React;
+  const [editingCrop, setEditingCrop] = useState(null);
+  const [cropDates, setCropDates] = useState(() => loadCropDates(uid));
+  useEffect(()=>{ setCropDates(loadCropDates(uid)); },[uid]);
 
   const saveCropDate = (crop, plantDate, harvestDate) => {
     const updated = {...cropDates, [crop]: {plantDate, harvestDate}};
     setCropDates(updated);
-    try { localStorage.setItem('agri_crop_dates', JSON.stringify(updated)); } catch{}
+    saveCropDates(uid, updated);
     setEditingCrop(null);
   };
 
@@ -1484,89 +1583,117 @@ const Dashboard = ({t,m,ck,realFirstName,realRegion,realFarm,realCrops,lang,setL
     if(total <= 0) return null;
     return Math.min(99, Math.max(1, Math.round((elapsed/total)*100)));
   };
-  const {useState, useEffect} = React;
+
+  // ── Weather for the farmer's location ──
   const [weather, setWeather] = useState(null);
-  const [today, setToday] = useState('');
+  const [weatherState, setWeatherState] = useState('loading'); // loading | ok | unavailable
+  const today = new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
   useEffect(()=>{
-    // Set today's date
-    const d = new Date();
-    setToday(d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}));
-    // Fetch real weather
-    const token = Auth.getToken();
-    if(!token) return;
-    // Get location from browser
-    if(navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(pos=>{
-        const {latitude, longitude} = pos.coords;
-        api.get(`/api/weather/current/?lat=${latitude}&lon=${longitude}`, token)
-          .then(data=>{ if(data && data.temp) setWeather(data); })
-          .catch(()=>{});
-      }, ()=>{
-        // fallback — use country default coords
-        // District coordinates for accurate weather
-        const districtCoords = {
-          // Rwanda
-          'Musanze':[-1.4994,29.6349],'Rubavu':[-1.6808,29.2580],'Huye':[-2.6007,29.7392],
-          'Rwamagana':[-1.9491,30.4349],'Bugesera':[-2.1750,30.1722],'Nyagatare':[-1.2999,30.3258],
-          'Gasabo':[-1.8864,30.0857],'Kicukiro':[-1.9706,30.1044],'Nyarugenge':[-1.9500,30.0594],
-          'Kamonyi':[-2.0311,29.8762],'Muhanga':[-2.0839,29.7547],'Nyanza':[-2.3527,29.7408],
-          // Kenya
-          'Nairobi':[1.2921,36.8219],'Kiambu':[-1.1714,36.8283],'Nakuru':[-0.3031,36.0800],
-          'Kisumu':[-0.1022,34.7617],'Meru':[0.0473,37.6490],
-          // Uganda
-          'Kampala':[0.3476,32.5825],'Wakiso':[0.3981,32.4597],'Gulu':[2.7747,32.2990],
-        };
-        const [lat,lon] = (realDistrict && districtCoords[realDistrict]) || 
-          ({kenya:[1.2921,36.8219],uganda:[1.3733,32.2903],tanzania:[-6.3690,34.8888],rwanda:[-1.9403,29.8739],ethiopia:[9.145,40.489]}[ck]) || [-1.9403,29.8739];
-        // coords already destructured above
-        api.get(`/api/weather/current/?lat=${lat}&lon=${lon}`, token)
-          .then(data=>{ if(data && data.temp) setWeather(data); })
-          .catch(()=>{});
+    let alive = true, started = false;
+    const load = (query) => {
+      if(started) return;
+      started = true;
+      api.get(`/api/weather/current/${query}`).then(data=>{
+        if(!alive) return;
+        if(data && data.temp !== undefined && data.temp !== null){ setWeather(data); setWeatherState('ok'); }
+        else setWeatherState('unavailable');
       });
+    };
+    const districtCoords = {
+      // Rwanda
+      'Musanze':[-1.4994,29.6349],'Rubavu':[-1.6808,29.2580],'Huye':[-2.6007,29.7392],
+      'Rwamagana':[-1.9491,30.4349],'Bugesera':[-2.1750,30.1722],'Nyagatare':[-1.2999,30.3258],
+      'Gasabo':[-1.8864,30.0857],'Kicukiro':[-1.9706,30.1044],'Nyarugenge':[-1.9500,30.0594],
+      'Kamonyi':[-2.0311,29.8762],'Muhanga':[-2.0839,29.7547],'Nyanza':[-2.3527,29.7408],
+      // Kenya
+      'Nairobi':[1.2921,36.8219],'Kiambu':[-1.1714,36.8283],'Nakuru':[-0.3031,36.0800],
+      'Kisumu':[-0.1022,34.7617],'Meru':[0.0473,37.6490],
+      // Uganda
+      'Kampala':[0.3476,32.5825],'Wakiso':[0.3981,32.4597],'Gulu':[2.7747,32.2990],
+    };
+    const countryCoords = {kenya:[1.2921,36.8219],uganda:[1.3733,32.2903],tanzania:[-6.3690,34.8888],rwanda:[-1.9403,29.8739],ethiopia:[9.145,40.489]};
+    const fallback = () => {
+      const p = profile && profile.profile;
+      if(p && p.latitude && p.longitude) return load('');   // the server uses the farm's saved location
+      const [lat,lon] = (realDistrict && districtCoords[realDistrict]) || countryCoords[ck] || countryCoords.rwanda;
+      load(`?lat=${lat}&lon=${lon}`);
+    };
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(
+        pos => load(`?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`),
+        fallback,
+        {timeout: 8000, maximumAge: 600000}
+      );
+      setTimeout(fallback, 10000);   // the farmer never answered the location prompt
+    } else {
+      fallback();
     }
-  },[]);
-
+    return () => { alive = false; };
+  },[realDistrict, ck]);
 
   const weatherIcon = weather ? {
     'Clear':'☀️','Clouds':'⛅','Rain':'🌧️','Drizzle':'🌦️',
     'Thunderstorm':'⛈️','Snow':'❄️','Mist':'🌫️','Haze':'🌫️'
   }[weather.icon] || '🌤️' : '🌤️';
 
+  // ── Account numbers straight from the server ──
+  const pi = planInfo(profile);
+  const crops = realCrops || [];
+  const alertCount = Array.isArray(alerts) ? alerts.length : null;
+  const stats = [
+    {icon:'leaf', bg:'#f0fdf4', ic:'#16a34a', val: crops.length, lbl:'My crops',
+     trend: crops.length ? crops.slice(0,3).join(', ') : 'Add your crops', up:true, go:crops.length ? 'crops' : 'settings'},
+    {icon:'search', bg:'#fef3c7', ic:'#d97706', val: pi.unlimited ? 'Unlimited' : (pi.scansUsed === null ? '—' : pi.scansUsed), small: pi.unlimited,
+     lbl:'Scans this month', trend: pi.unlimited ? 'Unlimited on your plan' : (pi.scansLeft === null ? '' : `${pi.scansLeft} of 3 free left`),
+     up: pi.unlimited || (pi.scansLeft || 0) > 0, go:'scan'},
+    {icon:'warn', bg:'#fef2f2', ic:'#dc2626', val: alertCount === null ? '—' : alertCount, lbl:'Alerts for your area',
+     trend: alerts === null ? 'Checking…' : alerts === false ? 'Could not check' : alertCount ? 'See below' : 'All clear', up: !alertCount, go:null},
+    {icon:'star', bg:'#eff6ff', ic:'#2563eb', val: pi.name, small:true, lbl:'Your plan',
+     trend: pi.until ? `Active until ${pi.until}` : 'Upgrade for unlimited scans', up:true, go:'plans'},
+  ];
+
+  // ── Market prices: live when published, otherwise clearly marked as reference ──
+  const market = useMarketData(ck);
+  const allPrices = market.markets.flatMap(mk => mk.prices.map(p => ({...p, market: mk.name})));
+  const mine = allPrices.filter(p => crops.some(c => p.crop.toLowerCase().includes(String(c).toLowerCase().replace(/e?s$/,''))));
+  const picks = [...mine, ...allPrices.filter(p => !mine.includes(p))].slice(0,3);
+
   return (
   <div className="fade-up">
     <div className="page-header">
-      <div className="page-title">{t.greeting}, {realFirstName||t.name.split(' ')[0]} {META[ck].flag}</div>
-      <div className="page-sub">{realRegion||t.region} · {today||t.ui.wt}</div>
+      <div className="page-title">{greetingFor(lang, t.greeting)}{realFirstName ? `, ${realFirstName}` : ''} {META[ck].flag}</div>
+      <div className="page-sub">{realRegion} · {today}</div>
     </div>
     <div className="weather-hero" style={{marginBottom:20}}>
       <div className="wh-bg">
-        {[['-60px','-60px','280px','280px'],['-20px','55%','180px','180px'],['40%','75%','350px','350px']].map(([t,l,w,h],i)=>(
-          <div key={i} className="wh-circle" style={{top:t,left:l,width:w,height:h}}/>
+        {[['-60px','-60px','280px','280px'],['-20px','55%','180px','180px'],['40%','75%','350px','350px']].map(([tp,l,w,h],i)=>(
+          <div key={i} className="wh-circle" style={{top:tp,left:l,width:w,height:h}}/>
         ))}
       </div>
       <div className="wh-inner">
         <div>
-          <div className="wh-greeting">{realFarm||t.farm}</div>
-          <div className="wh-name">{weather ? weather.city||realRegion : realRegion||t.region}</div>
+          <div className="wh-greeting">{realFarm || 'Your farm'}</div>
+          <div className="wh-name">{(weather && weather.city) || realRegion}</div>
           <div className="wh-pills" style={{marginTop:12}}>
-            <div className="wh-pill"><span>{weatherIcon}</span>{weather ? weather.description : t.wdesc}</div>
-            {weather && <div className="wh-pill"><span>💧</span>Humidity: {weather.humidity}%</div>}
-            {weather && <div className="wh-pill"><span>💨</span>Wind: {weather.wind_speed} m/s</div>}
-            {!weather && <div className="wh-pill warn"><span>⚠</span>{t.wpill}</div>}
+            {weatherState==='ok' && <div className="wh-pill"><span>{weatherIcon}</span>{weather.description}</div>}
+            {weatherState==='ok' && <div className="wh-pill"><span>💧</span>Humidity: {weather.humidity}%</div>}
+            {weatherState==='ok' && <div className="wh-pill"><span>💨</span>Wind: {weather.wind_speed} m/s</div>}
+            {weatherState==='loading' && <div className="wh-pill"><span>🌤️</span>Loading weather…</div>}
+            {weatherState==='unavailable' && <div className="wh-pill warn"><span>⚠</span>Weather unavailable right now</div>}
           </div>
         </div>
         <div className="wh-right">
-          <div className="wh-temp">{weather ? weather.temp+'°' : '...'}</div>
-          <div className="wh-desc">{weather ? weather.feels_like+'° feels like' : 'Loading...'}</div>
+          <div className="wh-temp">{weatherState==='ok' ? weather.temp+'°' : weatherState==='loading' ? '…' : '—'}</div>
+          <div className="wh-desc">{weatherState==='ok' ? weather.feels_like+'° feels like' : ''}</div>
         </div>
       </div>
     </div>
     <div className="stat-cards" style={{marginBottom:20}}>
-      {[{icon:'leaf',bg:'#f0fdf4',ic:'#16a34a',val:t.crops.length,lbl:'Active crops',trend:'+1 this season',up:true},{icon:'chart',bg:'#eff6ff',ic:'#2563eb',val:m.currency+' '+m.prices[0],lbl:'Maize price / kg',trend:m.chgs[0]+' this week',up:m.ups[0]},{icon:'search',bg:'#fef3c7',ic:'#d97706',val:'3',lbl:'Scans this month',trend:'2 remaining free',up:true},{icon:'warn',bg:'#fef2f2',ic:'#dc2626',val:'2',lbl:'Active alerts',trend:'Requires attention',up:false}].map((s,i)=>(
-        <div key={i} className="stat-card">
+      {stats.map((s,i)=>(
+        <div key={i} className="stat-card" style={s.go?{cursor:'pointer'}:{}} onClick={()=>s.go && goTo && goTo(s.go)}>
           <div className="sc-icon" style={{background:s.bg}}><Ic n={s.icon} sz={18} s={s.ic} sw={2}/></div>
-          <div className="sc-val">{s.val}</div>
+          <div className="sc-val" style={s.small?{fontSize:18}:{}}>{s.val}</div>
           <div className="sc-lbl">{s.lbl}</div>
           <div className={`sc-trend ${s.up?'sc-up':'sc-dn'}`}>{s.trend}</div>
         </div>
@@ -1574,24 +1701,32 @@ const Dashboard = ({t,m,ck,realFirstName,realRegion,realFarm,realCrops,lang,setL
     </div>
     <div style={{display:'grid',gridTemplateColumns:'1.6fr 1fr',gap:20,marginBottom:20}}>
       <div className="card">
-        <div className="card-header"><div className="card-title">{t.ui.crops}</div><button className="card-action">{t.ui.addCrop}</button></div>
+        <div className="card-header"><div className="card-title">{t.ui.crops}</div><button className="card-action" onClick={()=>goTo && goTo('settings')}>{t.ui.addCrop}</button></div>
+        {crops.length === 0 ? (
+          <div style={{padding:'18px 4px',fontSize:14,color:'#6b7280'}}>
+            You haven't added any crops yet.
+            <button onClick={()=>goTo && goTo('settings')} style={{display:'block',marginTop:10,background:'#15803d',color:'#fff',border:'none',borderRadius:8,padding:'9px 14px',fontSize:13,fontWeight:600,cursor:'pointer'}}>Add my crops</button>
+          </div>
+        ) : (
         <table className="crop-table" style={{width:'100%'}}>
           <thead><tr><th>Crop</th><th>Progress</th><th>Status</th></tr></thead>
           <tbody>
-          {realCrops && realCrops.length > 0 ? realCrops.map((crop,i)=>{
+          {crops.map((crop,i)=>{
             const info = getCropInfo(crop);
             const saved = cropDates[crop];
             const customPct = saved ? calcProgress(saved.plantDate, saved.harvestDate) : null;
             const pct = customPct !== null ? customPct : info.pct;
-            const plantLabel = saved?.plantDate ? new Date(saved.plantDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : info.plant;
-            const harvestLabel = saved?.harvestDate ? new Date(saved.harvestDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : info.harvest;
+            const fmt = (d) => new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+            const detail = saved?.plantDate && saved?.harvestDate
+              ? `Planted ${fmt(saved.plantDate)} · Harvest ${fmt(saved.harvestDate)}`
+              : `Usually planted ${info.plant} · harvest ${info.harvest} · tap Edit to set your dates`;
             const status = pct>=85?'Harvest soon':pct>=60?'Growing well':pct>=30?'Growing':'Early stage';
             const bc = pct>=85?'ba':pct>=60?'bg':'bb';
             return (
             <React.Fragment key={i}>
             <tr>
-              <td><div style={{display:'flex',alignItems:'center'}}><span className="crop-dot" style={{background:info.color}}/><div><div className="crop-row-name">{crop}</div><div className="crop-row-detail">Plant: {plantLabel} · Harvest: {harvestLabel}{saved?' ✏️':''}</div></div></div></td>
-              <td><div className="crop-prog-bg"><div className="crop-prog-fill" style={{width:pct+'%',background:info.color}}/></div><div style={{fontSize:10,color:'#9ca3af',marginTop:3}}>{pct}%</div></td>
+              <td><div style={{display:'flex',alignItems:'center'}}><span className="crop-dot" style={{background:info.color}}/><div><div className="crop-row-name">{crop}</div><div className="crop-row-detail">{detail}</div></div></div></td>
+              <td><div className="crop-prog-bg"><div className="crop-prog-fill" style={{width:pct+'%',background:info.color}}/></div><div style={{fontSize:10,color:'#9ca3af',marginTop:3}}>{customPct !== null ? `${pct}%` : `~${pct}% (estimate)`}</div></td>
               <td style={{display:'flex',alignItems:'center',gap:6}}><span className={'badge '+bc}>{status}</span><button onClick={()=>setEditingCrop(editingCrop===crop?null:crop)} style={{background:'none',border:'1px solid #e5e7eb',borderRadius:6,padding:'2px 8px',fontSize:11,cursor:'pointer',color:'#6b7280'}}>{editingCrop===crop?'Cancel':'Edit'}</button></td>
             </tr>
             {editingCrop===crop && (
@@ -1604,34 +1739,45 @@ const Dashboard = ({t,m,ck,realFirstName,realRegion,realFarm,realCrops,lang,setL
             )}
             </React.Fragment>
             );
-          }) : t.crops.map((c,i)=>(
-            <tr key={i}>
-              <td><div style={{display:'flex',alignItems:'center'}}><span className="crop-dot" style={{background:c.cc}}/><div><div className="crop-row-name">{c.n}</div><div className="crop-row-detail">{c.d}</div></div></div></td>
-              <td><div className="crop-prog-bg"><div className="crop-prog-fill" style={{width:`${c.pct}%`,background:c.cc}}/></div><div style={{fontSize:10,color:'#9ca3af',marginTop:3}}>{c.pct}%</div></td>
-              <td><span className={`badge ${c.bc}`}>{c.b}</span></td>
-            </tr>
-          ))}
+          })}
           </tbody>
         </table>
+        )}
       </div>
       <div className="card">
-        <div className="card-header"><div className="card-title">Alerts</div><button className="card-action">{t.ui.allAlerts}</button></div>
-        <div className="alert-item danger"><div className="ai-dot"/><div className="ai-body"><div className="ai-title">{t.as}</div><div className="ai-sub">{t.am}</div><div className="ai-time">2 hours ago</div></div></div>
-        <div className="alert-item"><div className="ai-dot"/><div className="ai-body"><div className="ai-title">{t.wpill}</div><div className="ai-sub">{t.wdesc}</div><div className="ai-time">Today</div></div></div>
-        <div className="alert-item success"><div className="ai-dot"/><div className="ai-body"><div className="ai-title">Market price up</div><div className="ai-sub">{m.chgs[0]} on your main crop this week</div><div className="ai-time">Yesterday</div></div></div>
+        <div className="card-header"><div className="card-title">Alerts for your area</div></div>
+        {alerts === null && <div style={{fontSize:13,color:'#9ca3af',padding:'8px 0'}}>Checking for alerts…</div>}
+        {alerts === false && <div style={{fontSize:13,color:'#9ca3af',padding:'8px 0'}}>Could not check alerts. They will load when you are back online.</div>}
+        {Array.isArray(alerts) && alerts.length === 0 && <div style={{fontSize:13,color:'#15803d',padding:'8px 0'}}>✓ No alerts for {realDistrict || 'your area'} right now.</div>}
+        {Array.isArray(alerts) && alerts.slice(0,4).map(a=>(
+          <div key={a.id} className={`alert-item${a.severity==='high'?' danger':a.severity==='low'?' success':''}`}>
+            <div className="ai-dot"/>
+            <div className="ai-body">
+              <div className="ai-title">{a.title}</div>
+              <div className="ai-sub">{a.description}{a.advice ? ` ${a.advice}` : ''}</div>
+              <div className="ai-time">{timeAgo(a.starts_at)}{a.district ? ` · ${a.district}` : ''}</div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
     <div className="card">
-      <div className="card-header"><div className="card-title">{t.ui.mkt} — {t.ui.wt}</div><button className="card-action">{t.ui.allPrices}</button></div>
+      <div className="card-header"><div className="card-title">{t.ui.mkt}</div><button className="card-action" onClick={()=>goTo && goTo('market')}>{t.ui.allPrices}</button></div>
+      {picks.length === 0 ? (
+        <div style={{fontSize:13,color:'#9ca3af',padding:'8px 0'}}>No market prices available yet.</div>
+      ) : (
       <div className="market-mini">
-        {t.mkts.map((mk,i)=>(
+        {picks.map((p,i)=>(
           <div key={i} className="mm-card">
-            <div className="mm-crop">{mk.c}</div><div className="mm-market">{mk.m}</div>
-            <div className="mm-price">{m.currency} {m.prices[i]}</div><div className="mm-unit">{mk.u}</div>
-            <div className={`mm-change ${m.ups[i]?'up':'dn'}`}>{m.chgs[i]} this week</div>
-            <div className="spark-mini">{m.bars[i].map((h,j)=><div key={j} className="sm-bar" style={{height:`${h}%`,background:m.color,opacity:.3+h/160}}/>)}</div>
+            <div className="mm-crop">{p.crop}</div><div className="mm-market">{p.market}</div>
+            <div className="mm-price">{p.currency} {Number(p.price).toLocaleString()}</div><div className="mm-unit">per {p.unit}</div>
+            {p.change ? <div className={`mm-change ${p.up?'up':'dn'}`}>{p.change}</div> : null}
           </div>
         ))}
+      </div>
+      )}
+      <div style={{fontSize:11,color:'#9ca3af',marginTop:10}}>
+        {market.live ? `Live prices${market.updated ? ` · updated ${market.updated}` : ''}` : 'Reference prices, not live. Live prices will appear here once they are published.'}
       </div>
     </div>
   </div>
@@ -1640,15 +1786,14 @@ const Dashboard = ({t,m,ck,realFirstName,realRegion,realFarm,realCrops,lang,setL
 
 
 /* ══ CROPS PAGE ══ */
-const CropsPage = ({t,m,ck,realCrops,realRegion,lang}) => {
+const CropsPage = ({t,m,ck,uid,realCrops,realRegion,lang,goTo}) => {
   const [editingCrop, setEditingCrop] = React.useState(null);
-  const [cropDates, setCropDates] = React.useState(()=>{
-    try{return JSON.parse(localStorage.getItem('agri_crop_dates')||'{}');}catch{return {};}
-  });
+  const [cropDates, setCropDates] = React.useState(() => loadCropDates(uid));
+  React.useEffect(()=>{ setCropDates(loadCropDates(uid)); },[uid]);
   const saveCropDate = (crop,plantDate,harvestDate)=>{
     const updated = {...cropDates,[crop]:{plantDate,harvestDate}};
     setCropDates(updated);
-    try{localStorage.setItem('agri_crop_dates',JSON.stringify(updated));}catch{}
+    saveCropDates(uid, updated);
     setEditingCrop(null);
   };
   const calcProgress = (plantDate,harvestDate)=>{
@@ -1659,7 +1804,7 @@ const CropsPage = ({t,m,ck,realCrops,realRegion,lang}) => {
     if(total<=0) return null;
     return Math.min(99,Math.max(1,Math.round((elapsed/total)*100)));
   };
-  const crops = realCrops&&realCrops.length>0 ? realCrops : (t.crops||[]).map(c=>c.n);
+  const crops = realCrops || [];
   return (
     <div className="fade-up">
       <div className="page-header">
@@ -1669,27 +1814,35 @@ const CropsPage = ({t,m,ck,realCrops,realRegion,lang}) => {
       <div className="card" style={{marginBottom:20}}>
         <div className="card-header">
           <div className="card-title">Crop Calendar</div>
-          <div style={{fontSize:12,color:'#6b7280'}}>Click Edit to set your actual planting dates</div>
+          <button className="card-action" onClick={()=>goTo && goTo('settings')}>{crops.length ? 'Change my crops' : 'Add my crops'}</button>
         </div>
+        {crops.length === 0 ? (
+          <div style={{padding:'18px 4px',fontSize:14,color:'#6b7280'}}>
+            You haven't added any crops yet. Add the crops you grow to track planting and harvest.
+            <button onClick={()=>goTo && goTo('settings')} style={{display:'block',marginTop:10,background:'#15803d',color:'#fff',border:'none',borderRadius:8,padding:'9px 14px',fontSize:13,fontWeight:600,cursor:'pointer'}}>Add my crops</button>
+          </div>
+        ) : (
         <table className="crop-table" style={{width:'100%'}}>
           <thead><tr><th>Crop</th><th>Planting / Harvest</th><th>Progress</th><th>Status</th><th></th></tr></thead>
           <tbody>
-          {crops.map((crop,i)=>{
-            const info = getCropInfo(typeof crop==='object'?crop.n:crop);
-            const name = typeof crop==='object'?crop.n:crop;
+          {crops.map((name,i)=>{
+            const info = getCropInfo(name);
             const saved = cropDates[name];
             const customPct = saved?calcProgress(saved.plantDate,saved.harvestDate):null;
             const pct = customPct!==null?customPct:info.pct;
             const status = pct>=85?'Harvest soon':pct>=60?'Growing well':pct>=30?'Growing':'Early stage';
             const bc = pct>=85?'ba':pct>=60?'bg':'bb';
-            const plantLabel = saved?.plantDate?new Date(saved.plantDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):info.plant;
-            const harvestLabel = saved?.harvestDate?new Date(saved.harvestDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):info.harvest;
+            const fmt = (d)=>new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
             return (
             <React.Fragment key={i}>
               <tr>
                 <td><div style={{display:'flex',alignItems:'center',gap:8}}><span className="crop-dot" style={{background:info.color,width:10,height:10,borderRadius:'50%',flexShrink:0}}/><strong>{name}</strong></div></td>
-                <td style={{fontSize:12,color:'#6b7280'}}>🌱 {plantLabel}<br/>🌾 {harvestLabel}{saved?' ✏️':''}</td>
-                <td><div className="crop-prog-bg" style={{width:100}}><div className="crop-prog-fill" style={{width:pct+'%',background:info.color}}/></div><div style={{fontSize:11,color:'#9ca3af',marginTop:2}}>{pct}%</div></td>
+                <td style={{fontSize:12,color:'#6b7280'}}>
+                  {saved?.plantDate && saved?.harvestDate
+                    ? <>🌱 {fmt(saved.plantDate)}<br/>🌾 {fmt(saved.harvestDate)} ✏️</>
+                    : <>🌱 Usually {info.plant}<br/>🌾 Usually {info.harvest}</>}
+                </td>
+                <td><div className="crop-prog-bg" style={{width:100}}><div className="crop-prog-fill" style={{width:pct+'%',background:info.color}}/></div><div style={{fontSize:11,color:'#9ca3af',marginTop:2}}>{customPct!==null ? `${pct}%` : `~${pct}% (estimate)`}</div></td>
                 <td><span className={'badge '+bc}>{status}</span></td>
                 <td><button onClick={()=>setEditingCrop(editingCrop===name?null:name)} style={{background:'none',border:'1px solid #e5e7eb',borderRadius:6,padding:'4px 10px',fontSize:11,cursor:'pointer',color:'#6b7280',whiteSpace:'nowrap'}}>{editingCrop===name?'Cancel':'✏️ Edit dates'}</button></td>
               </tr>
@@ -1705,7 +1858,9 @@ const CropsPage = ({t,m,ck,realCrops,realRegion,lang}) => {
           })}
           </tbody>
         </table>
+        )}
       </div>
+      {ck === 'rwanda' && (
       <div className="card">
         <div className="card-header"><div className="card-title">Rwanda Planting Seasons</div></div>
         <div style={{fontSize:13,color:'#374151',lineHeight:1.8}}>
@@ -1713,10 +1868,11 @@ const CropsPage = ({t,m,ck,realCrops,realRegion,lang}) => {
           <div>☀️ <strong>Season B</strong> — February to June (short rains)</div>
           <div>🌿 <strong>Season C</strong> — July to August (small season, marshlands only)</div>
           <div style={{marginTop:8,padding:'10px 14px',background:'#f0fdf4',borderRadius:8,fontSize:12,color:'#15803d'}}>
-            💡 Tip: Set your actual planting dates above for accurate progress tracking and harvest reminders.
+            💡 Tip: Set your actual planting dates above for accurate progress tracking. Dates are saved on this phone.
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 };
@@ -1742,59 +1898,54 @@ const STATIC_MARKETS = {
   ],
 };
 
-const MarketPage = ({t,m,ck,realRegion}) => {
+const COUNTRY_CODES = {rwanda:'RW',kenya:'KE',uganda:'UG',tanzania:'TZ',ethiopia:'ET'};
+const fmtChange = (c) => {
+  if(c === null || c === undefined || c === '') return '';
+  const str = String(c);
+  if(str.includes('%')) return str;
+  const n = parseFloat(str);
+  if(isNaN(n) || n === 0) return '';
+  return (n > 0 ? '+' : '') + n + '%';
+};
+// Live prices published by the AgriAdvisor team; reference prices (no % changes) when none are published
+const useMarketData = (ck) => {
   const {useState,useEffect} = React;
-  const [marketData, setMarketData] = useState(STATIC_MARKETS[ck]||STATIC_MARKETS.rwanda);
-  const [isLive, setIsLive] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [lastUpdated, setLastUpdated] = useState(null);
-  const [error, setError] = useState(null);
-
+  const reference = (STATIC_MARKETS[ck]||STATIC_MARKETS.rwanda).map(mk=>({...mk, prices: mk.prices.map(p=>({...p, change:'', up:true}))}));
+  const [state, setState] = useState({markets: reference, live:false, loading:true, updated:null});
   useEffect(()=>{
-    const token = Auth.getToken();
-    if(!token){setLoading(false);return;}
-    fetch(`${API_BASE}/api/market/prices/?country=${ck}`,{
-      headers:{'Authorization':`Bearer ${token}`}
-    })
-    .then(r=>{
-      if(!r.ok) throw new Error('status '+r.status);
-      return r.json();
-    })
-    .then(data=>{
-      // Accept array or {markets:[...], last_updated:...}
-      const arr = Array.isArray(data) ? data : (data.markets||data.results||null);
-      if(arr && arr.length > 0){
-        // Normalise price entries: backend may use price_per_unit, crop_name etc.
-        const normalised = arr.map(mkt=>({
-          name: mkt.name||mkt.market_name||'Market',
-          city: mkt.city||mkt.location||'',
-          prices: (mkt.prices||mkt.items||[]).map(p=>({
+    let alive = true;
+    setState({markets: reference, live:false, loading:true, updated:null});
+    api.get(`/api/market/prices/?country=${COUNTRY_CODES[ck]||'RW'}`).then(data=>{
+      if(!alive) return;
+      const arr = Array.isArray(data) ? data : (data && (data.markets||data.results)) || [];
+      let newest = null;
+      const markets = arr.map(mkt=>({
+        name: mkt.name||mkt.market_name||'Market',
+        city: mkt.city||mkt.location||'',
+        prices: (mkt.prices||mkt.items||[]).map(p=>{
+          const ch = fmtChange(p.change !== undefined ? p.change : (p.change_pct !== undefined ? p.change_pct : p.price_change));
+          if(p.date && (!newest || p.date > newest)) newest = p.date;
+          return {
             crop: p.crop||p.crop_name||p.commodity||p.name||'',
             price: parseFloat(p.price||p.price_per_unit||p.amount||0),
             unit: p.unit||p.unit_of_measure||'kg',
-            currency: p.currency||(m&&m.currency)||'RWF',
-            change: p.change||p.price_change||'',
-            up: p.up!==undefined ? p.up : (p.price_change||p.change||'').startsWith('+'),
-          }))
-        }));
-        setMarketData(normalised);
-        setIsLive(true);
-        setLastUpdated(data.last_updated||null);
-      }
-      setLoading(false);
-    })
-    .catch(()=>{
-      // silently fall back to static data
-      setError('live');
-      setLoading(false);
+            currency: p.currency||'RWF',
+            change: ch,
+            up: !ch.startsWith('-'),
+          };
+        }).filter(p=>p.crop && p.price>0)
+      })).filter(mk=>mk.prices.length>0);
+      const fmtD = (d) => { try { return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); } catch(e) { return d; } };
+      if(markets.length) setState({markets, live:true, loading:false, updated: newest ? fmtD(newest) : null});
+      else setState(s=>({...s, loading:false}));
     });
+    return ()=>{ alive = false; };
   },[ck]);
+  return state;
+};
 
-  const fmtDate = (iso) => {
-    if(!iso) return new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-    return new Date(iso).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
-  };
-
+const MarketPage = ({t,m,ck,realRegion}) => {
+  const {markets: marketData, live: isLive, loading, updated} = useMarketData(ck);
   return (
     <div className="fade-up">
       <div className="page-header">
@@ -1833,14 +1984,14 @@ const MarketPage = ({t,m,ck,realRegion}) => {
         </div>
       ))}
       <div style={{fontSize:12,color:'#9ca3af',textAlign:'center',padding:'8px'}}>
-        {isLive ? `Live prices from AgriAdvisor network · Updated: ${fmtDate(lastUpdated)}` : 'Reference prices from recent market visits · Prices update when backend data is available'}
+        {isLive ? `Live prices from the AgriAdvisor team${updated ? ` · last updated ${updated}` : ''}` : 'Reference prices, not live. Live prices will appear here once they are published.'}
       </div>
     </div>
   );
 };
 
 /* ══ SCAN PAGE ══ */
-const ScanPage = ({t,m,ck,realCrops}) => {
+const ScanPage = ({t,m,ck,realCrops,profile}) => {
   const {useState,useRef} = React;
   const [stage,setStage] = useState('upload'); // upload | selecting | analyzing | result | error | history
   const [selectedFile,setSelectedFile] = useState(null);
@@ -1850,6 +2001,21 @@ const ScanPage = ({t,m,ck,realCrops}) => {
   const [scanHistory,setScanHistory] = useState([]);
   const [errorMsg,setErrorMsg] = useState('');
   const fileRef = useRef(null);
+  const planNow = planInfo(profile);
+  // Earlier scans saved on this account
+  React.useEffect(()=>{
+    let alive = true;
+    api.get('/api/crops/history/').then(d=>{
+      if(!alive || !Array.isArray(d)) return;
+      setScanHistory(d.map(s=>({
+        file: null,
+        crop: s.crop_name || (s.diagnosis && s.diagnosis.crop) || 'Crop',
+        result: {disease: {name: (s.diagnosis && s.diagnosis.name) || (s.disease && s.disease.name) || 'Scan'}, confidence: s.confidence},
+        date: new Date(s.created_at).toLocaleDateString(),
+      })));
+    });
+    return ()=>{ alive = false; };
+  },[]);
 
   const crops = realCrops&&realCrops.length>0 ? realCrops : ['Maize','Potatoes','Beans','Tomatoes','Cassava'];
 
@@ -1911,9 +2077,8 @@ const ScanPage = ({t,m,ck,realCrops}) => {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 75000);
       try {
-        return await fetch(`${API_BASE}/api/crops/diagnose/`, {
+        return await authFetch('/api/crops/diagnose/', {
           method:'POST',
-          headers:{'Authorization':`Bearer ${token}`},
           body: formData,
           signal: ctrl.signal
         });
@@ -1940,6 +2105,7 @@ const ScanPage = ({t,m,ck,realCrops}) => {
       setResult(data);
       setScanHistory(h=>[{file:previewUrl,crop:selectedCrop||data.crop||'Unknown',result:data,date:new Date().toLocaleDateString()}, ...h.slice(0,9)]);
       setStage('result');
+      window.dispatchEvent(new Event('agri-profile-refresh'));   // update the scan count everywhere
       return;
     }
 
@@ -1977,6 +2143,7 @@ const ScanPage = ({t,m,ck,realCrops}) => {
             <div className="suz-icon"><Ic n="cam" sz={36} s="#15803d" sw={1.5}/></div>
             <div className="suz-title">{t.ui.scanTitle}</div>
             <div className="suz-sub">Take a photo or upload from gallery · Supports JPG, PNG · Max 10MB</div>
+            <div className="suz-sub" style={{marginTop:4,fontWeight:600}}>{planNow.unlimited ? 'Unlimited scans on your plan' : planNow.scansLeft !== null ? `${planNow.scansLeft} of 3 free scans left this month` : ''}</div>
             <div style={{display:'flex',gap:10,marginTop:12,justifyContent:'center'}}>
               <button className="suz-btn" onClick={e=>{e.stopPropagation();fileRef.current?.click();}}>
                 📷 Take photo
@@ -1993,7 +2160,7 @@ const ScanPage = ({t,m,ck,realCrops}) => {
               <div className="card-header"><div className="card-title">Recent scans</div></div>
               {scanHistory.slice(0,3).map((h,i)=>(
                 <div key={i} style={{display:'flex',gap:12,alignItems:'center',padding:'10px 0',borderBottom:i<2?'1px solid #f3f4f6':'none'}}>
-                  <img src={h.file} style={{width:48,height:48,objectFit:'cover',borderRadius:8}}/>
+                  {h.file ? <img src={h.file} style={{width:48,height:48,objectFit:'cover',borderRadius:8}}/> : <div style={{width:48,height:48,borderRadius:8,background:'#f0fdf4',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22}}>🌿</div>}
                   <div style={{flex:1}}>
                     <div style={{fontSize:13,fontWeight:600}}>{h.result?.disease?.name||h.result?.disease_raw||'Unknown'}</div>
                     <div style={{fontSize:12,color:'#6b7280'}}>{h.crop} · {h.date}</div>
@@ -2103,7 +2270,7 @@ const ScanPage = ({t,m,ck,realCrops}) => {
 
             {result.scans_remaining !== undefined && (
               <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:10,padding:'10px 14px',marginTop:12,fontSize:12,color:'#15803d'}}>
-                {result.scans_remaining > 0 ? `✅ ${result.scans_remaining} free scans remaining this month` : '⚠️ No free scans left this month — upgrade to Farmer Pro for unlimited scans'}
+                {(result.scans_remaining >= 999 || planNow.unlimited) ? '✅ Unlimited scans on your plan' : result.scans_remaining > 0 ? `✅ ${result.scans_remaining} free scan${result.scans_remaining===1?'':'s'} left this month` : '⚠️ No free scans left this month — upgrade to Farmer Pro for unlimited scans'}
               </div>
             )}
 
@@ -2148,31 +2315,59 @@ const PlansPage = ({t,m,ck}) => (
 );
 
 /* ══ SETTINGS PAGE ══ */
-const SettingsPage = ({t,m,ck,lang,setLang,realName,realFirstName,realCrops,realFarm,realRegion,onLogout}) => {
+const SettingsPage = ({t,m,ck,lang,setLang,profile,realName,realDistrict,realCrops,realRegion,alerts,onLogout,goTo}) => {
   const [activeNav,setActiveNav]=useState('profile');
-  const [toggles,setToggles]=useState({sms:true,email:false,pest:true,weather:true,price:false});
   const [editing,setEditing]=useState(false);
   const [saving,setSaving]=useState(false);
   const [saveMsg,setSaveMsg]=useState('');
-  const [editForm,setEditForm]=useState({full_name:realName||'',district:realRegion||''});
+  const p = (profile && profile.profile) || {};
+  const blankForm = () => ({
+    full_name: realName || '',
+    district: realDistrict || '',
+    farm_size: p.farm_size ? String(Number(parseFloat(p.farm_size).toFixed(2))) : '',
+    crops: [...(realCrops || [])],
+    other: '',
+  });
+  const [form,setForm]=useState(blankForm);
+  React.useEffect(()=>{ if(!editing) setForm(blankForm()); },[profile, editing]);
   const sLcode=LANGS[ck].code;
+  const pi = planInfo(profile);
+  const cropChoices = Array.from(new Set([...(CROP_OPTIONS[ck] || CROP_OPTIONS.kenya), ...(realCrops || [])]));
+  const districtChoices = Object.values(PROVINCES[ck] || {}).flat();
+  const toggleCrop = (c) => setForm(f => ({...f, crops: f.crops.includes(c) ? f.crops.filter(x=>x!==c) : [...f.crops, c]}));
 
   const handleSaveProfile = async () => {
     setSaving(true); setSaveMsg('');
-    const token = Auth.getToken();
-    if(!token){setSaving(false);setSaveMsg('Not logged in');return;}
+    const size = parseFloat(form.farm_size);
+    const crops = [...form.crops, ...(form.other.trim() ? [form.other.trim()] : [])];
     try {
       await api.put('/api/auth/profile/', {
-        full_name: editForm.full_name,
-        profile: { district: editForm.district }
-      }, token);
-      setSaveMsg('✅ Profile updated! Refresh to see changes.');
+        full_name: form.full_name.trim(),
+        profile: {
+          district: form.district.trim(),
+          farm_size: isNaN(size) || size <= 0 ? null : size,
+          main_crops: Array.from(new Set(crops)),
+        }
+      });
+      window.dispatchEvent(new Event('agri-profile-refresh'));
+      setSaveMsg('✅ Saved to your account.');
       setEditing(false);
     } catch(e) {
-      setSaveMsg('❌ Failed to save. Try again.');
+      setSaveMsg(e.message === 'No connection.' ? '❌ No connection. Your changes were not saved. Try again when you have signal.' : '❌ Could not save. Please check the details and try again.');
     }
     setSaving(false);
   };
+
+  // Language choice is saved to the account so it stays the same on every phone
+  const chooseLanguage = (code) => {
+    setLang(code);
+    api.put('/api/auth/profile/', {language: code}).then(()=>window.dispatchEvent(new Event('agri-profile-refresh'))).catch(()=>{});
+  };
+
+  const initials = realName ? realName.split(' ').filter(Boolean).map(n=>n[0]).join('').toUpperCase().slice(0,2) : '👤';
+  const inputStyle = {width:'100%',padding:'10px 12px',border:'1.5px solid #e5e7eb',borderRadius:8,fontSize:14,outline:'none'};
+  const labelStyle = {fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:4};
+
   return (
     <div className="fade-up">
       <div className="page-header"><div className="page-title">{t.ui.settings}</div><div className="page-sub">Manage your account and preferences</div></div>
@@ -2187,29 +2382,42 @@ const SettingsPage = ({t,m,ck,lang,setLang,realName,realFirstName,realCrops,real
         <div className="settings-panel">
           {activeNav==='profile'&&(
             <div>
-              <div className="profile-avatar-big">{realName ? realName.split(" ").map(n=>n[0]).join("").toUpperCase().slice(0,2) : m.initials}</div>
-              <div className="profile-name">{realName}</div>
+              <div className="profile-avatar-big">{initials}</div>
+              <div className="profile-name">{realName || 'Add your name'}</div>
               <div className="profile-detail">{realRegion}</div>
-              <div className="profile-detail" style={{marginTop:4}}>{realFarm}</div>
               <div className="sp-section" style={{marginTop:24}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
                   <div className="sp-section-title" style={{margin:0}}>Farm details</div>
-                  <button onClick={()=>setEditing(!editing)} style={{background:editing?'#fee2e2':'#f0fdf4',border:`1px solid ${editing?'#fecaca':'#bbf7d0'}`,borderRadius:8,padding:'6px 14px',fontSize:12,fontWeight:600,cursor:'pointer',color:editing?'#dc2626':'#15803d'}}>
+                  <button onClick={()=>{ setSaveMsg(''); setEditing(!editing); }} style={{background:editing?'#fee2e2':'#f0fdf4',border:`1px solid ${editing?'#fecaca':'#bbf7d0'}`,borderRadius:8,padding:'6px 14px',fontSize:12,fontWeight:600,cursor:'pointer',color:editing?'#dc2626':'#15803d'}}>
                     {editing?'Cancel':'✏️ Edit profile'}
                   </button>
                 </div>
-                {saveMsg && <div style={{fontSize:12,padding:'8px 12px',background:'#f0fdf4',borderRadius:8,marginBottom:12,color:'#15803d'}}>{saveMsg}</div>}
+                {saveMsg && <div style={{fontSize:12,padding:'8px 12px',background:saveMsg.startsWith('✅')?'#f0fdf4':'#fef2f2',borderRadius:8,marginBottom:12,color:saveMsg.startsWith('✅')?'#15803d':'#b91c1c'}}>{saveMsg}</div>}
                 {editing ? (
                   <div style={{display:'flex',flexDirection:'column',gap:12}}>
                     <div>
-                      <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:4}}>Full name</label>
-                      <input style={{width:'100%',padding:'10px 12px',border:'1.5px solid #e5e7eb',borderRadius:8,fontSize:14,outline:'none'}}
-                        value={editForm.full_name} onChange={e=>setEditForm({...editForm,full_name:e.target.value})} placeholder="Your full name"/>
+                      <label style={labelStyle}>Full name</label>
+                      <input style={inputStyle} value={form.full_name} onChange={e=>setForm({...form,full_name:e.target.value})} placeholder="Your full name"/>
                     </div>
                     <div>
-                      <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:4}}>District</label>
-                      <input style={{width:'100%',padding:'10px 12px',border:'1.5px solid #e5e7eb',borderRadius:8,fontSize:14,outline:'none'}}
-                        value={editForm.district} onChange={e=>setEditForm({...editForm,district:e.target.value})} placeholder="Your district"/>
+                      <label style={labelStyle}>District</label>
+                      <input style={inputStyle} list="agri-districts" value={form.district} onChange={e=>setForm({...form,district:e.target.value})} placeholder="Your district"/>
+                      <datalist id="agri-districts">{districtChoices.map(d=><option key={d} value={d}/>)}</datalist>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Farm size (hectares)</label>
+                      <input style={inputStyle} type="number" min="0" step="0.1" inputMode="decimal" value={form.farm_size} onChange={e=>setForm({...form,farm_size:e.target.value})} placeholder="e.g. 0.5"/>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Crops you grow</label>
+                      <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                        {cropChoices.map(c=>(
+                          <div key={c} onClick={()=>toggleCrop(c)} style={{border:`1.5px solid ${form.crops.includes(c)?'var(--green)':'#e5e7eb'}`,borderRadius:20,padding:'6px 12px',cursor:'pointer',fontSize:13,fontWeight:form.crops.includes(c)?700:400,background:form.crops.includes(c)?'#f0fdf4':'#fff'}}>
+                            {form.crops.includes(c)?'✓ ':''}{c}
+                          </div>
+                        ))}
+                      </div>
+                      <input style={{...inputStyle,marginTop:8}} value={form.other} onChange={e=>setForm({...form,other:e.target.value})} placeholder="Another crop (optional)"/>
                     </div>
                     <button onClick={handleSaveProfile} disabled={saving}
                       style={{background:'#15803d',color:'#fff',border:'none',borderRadius:8,padding:'11px',fontSize:14,fontWeight:600,cursor:'pointer'}}>
@@ -2219,12 +2427,13 @@ const SettingsPage = ({t,m,ck,lang,setLang,realName,realFirstName,realCrops,real
                 ) : (
                   <div>
                   {[
-                    ['Full name', realName||t.name],
-                    ['Phone', window._agriUserData?.phone||''],
+                    ['Full name', realName || 'Not set'],
+                    ['Phone', (profile && profile.phone) || ''],
                     ['Country', ck.charAt(0).toUpperCase()+ck.slice(1)],
-                    ['District', realRegion||t.region],
-                    ['Farm size', realFarm||t.farm],
-                    ['Crops', realCrops&&realCrops.length>0?realCrops.join(', '):t.crops.map(c=>c.n).join(', ')],
+                    ['District', realDistrict || 'Not set'],
+                    ['Farm size', fmtFarmSize(p.farm_size) || 'Not set'],
+                    ['Crops', (realCrops && realCrops.length) ? realCrops.join(', ') : 'None yet'],
+                    ['Plan', pi.until ? `${pi.name} · until ${pi.until}` : pi.name],
                   ].map(([l,v])=>(
                     <div key={l} className="sp-row"><div><div className="sp-row-label">{l}</div><div className="sp-row-sub">{v||'—'}</div></div></div>
                   ))}
@@ -2236,13 +2445,22 @@ const SettingsPage = ({t,m,ck,lang,setLang,realName,realFirstName,realCrops,real
           {activeNav==='notifications'&&(
             <div>
               <div className="sp-section">
-                <div className="sp-section-title">Alert preferences</div>
-                {[['sms','SMS alerts','Receive alerts via text message'],['email','Email alerts','Daily summary to your inbox'],['pest','Pest warnings','Nearby pest outbreak alerts'],['weather','Weather alerts','Rain & drought notifications'],['price','Price alerts','Market price change alerts']].map(([k,l,s])=>(
-                  <div key={k} className="sp-row">
-                    <div><div className="sp-row-label">{l}</div><div className="sp-row-sub">{s}</div></div>
-                    <button className={`toggle${toggles[k]?' on':''}`} onClick={()=>setToggles(p=>({...p,[k]:!p[k]}))}/>
+                <div className="sp-section-title">Alerts</div>
+                <div className="sp-row"><div>
+                  <div className="sp-row-label">Alerts for your area</div>
+                  <div className="sp-row-sub">
+                    Weather and pest alerts for {realDistrict || 'your country'} appear on your Home page
+                    {Array.isArray(alerts) ? ` (${alerts.length ? `${alerts.length} active now` : 'none right now'})` : ''}.
                   </div>
-                ))}
+                </div></div>
+                <div className="sp-row"><div>
+                  <div className="sp-row-label">SMS and email alerts</div>
+                  <div className="sp-row-sub">Coming soon. You will be able to choose which alerts you receive by SMS.</div>
+                </div></div>
+                <div className="sp-row"><div>
+                  <div className="sp-row-label">Make alerts match your farm</div>
+                  <div className="sp-row-sub">Keep your district up to date in Profile so you get the alerts for your area.</div>
+                </div></div>
               </div>
             </div>
           )}
@@ -2252,7 +2470,7 @@ const SettingsPage = ({t,m,ck,lang,setLang,realName,realFirstName,realCrops,real
                 <div className="sp-section-title">Display language</div>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginTop:8}}>
                   {[{code:'en',name:'English',sub:'International'},{code:sLcode,name:LANGS[ck].localName,sub:ck.charAt(0).toUpperCase()+ck.slice(1)}].map(l=>(
-                    <div key={l.code} onClick={()=>setLang(l.code)} style={{border:`1.5px solid ${lang===l.code?'var(--green)':'#e5e7eb'}`,borderRadius:12,padding:14,cursor:'pointer',background:lang===l.code?'#f0fdf4':'#fff'}}>
+                    <div key={l.code} onClick={()=>chooseLanguage(l.code)} style={{border:`1.5px solid ${lang===l.code?'var(--green)':'#e5e7eb'}`,borderRadius:12,padding:14,cursor:'pointer',background:lang===l.code?'#f0fdf4':'#fff'}}>
                       <div style={{fontSize:13,fontWeight:700,color:'#1a1a1a'}}>{l.name}</div>
                       <div style={{fontSize:11,color:'#6b7280',marginTop:2}}>{l.sub}</div>
                       {lang===l.code&&<div style={{fontSize:11,color:'var(--green)',fontWeight:600,marginTop:6}}>✓ Currently active</div>}
@@ -2264,23 +2482,19 @@ const SettingsPage = ({t,m,ck,lang,setLang,realName,realFirstName,realCrops,real
           )}
           {activeNav==='subscription'&&(
             <div>
-              <div className="pay-note" style={{marginBottom:20}}>
-                <Ic n="card" sz={18} s="#1d4ed8" sw={2}/>
-                <p><strong>{m.pay}:</strong> {t.ui.payNote} {m.pay} {t.ui.payNote2}</p>
-              </div>
-              <div className="plans-grid">
-                {t.tiers.map((tr,i)=>(
-                  <div key={i} className={`plan-card${i===1?' featured':''}`}>
-                    {tr.pt&&<div className="plan-pop">{tr.pt}</div>}
-                    <div className="plan-name">{tr.n}</div>
-                    <div className="plan-price">{tr.p}<span>{t.ui.pm}</span></div>
-                    <div className="plan-features">
-                      {tr.f.map((f,j)=><div key={j} className="pf-row"><div className="pf-check"><Ic n="check" sz={10} s="#15803d" sw={2.5}/></div><span className="pf-on">{f}</span></div>)}
-                      {tr.lk.map((f,j)=><div key={j} className="pf-row"><div className="pf-x"><Ic n="x" sz={10} s="#9ca3af" sw={2.5}/></div><span className="pf-off">{f}</span></div>)}
-                    </div>
-                    <button className={`plan-btn ${i===1?'plan-btn-pri':'plan-btn-sec'}`}>{tr.pb}</button>
-                  </div>
-                ))}
+              <div className="sp-section">
+                <div className="sp-section-title">Your plan</div>
+                <div className="sp-row"><div>
+                  <div className="sp-row-label">{pi.name}</div>
+                  <div className="sp-row-sub">{pi.until ? `Active until ${pi.until}` : 'Free forever'}</div>
+                </div></div>
+                <div className="sp-row"><div>
+                  <div className="sp-row-label">Crop Doctor scans</div>
+                  <div className="sp-row-sub">{pi.unlimited ? 'Unlimited' : pi.scansLeft === null ? '—' : `${pi.scansLeft} of 3 free scans left this month`}</div>
+                </div></div>
+                <button onClick={()=>goTo && goTo('plans')} style={{marginTop:14,background:'#15803d',color:'#fff',border:'none',borderRadius:8,padding:'11px 16px',fontSize:14,fontWeight:600,cursor:'pointer'}}>
+                  {pi.plan === 'free' ? 'See plans and upgrade' : 'See plans'}
+                </button>
               </div>
             </div>
           )}
@@ -2334,22 +2548,28 @@ const WebApp = ({countryKey, langKey, onLogout, userProfile}) => {
   const t = lobj[lang==='en'?'en':lcode];
   const ui = t.ui;
 
-  // Real user data — override demo data if available
-  const realName = userProfile?.full_name || userProfile?.profile?.full_name || t.name;
-  const realFirstName = realName.split(' ')[0];
-  const realDistrict = userProfile?.profile?.district || '';
-  const realFarmSize = userProfile?.profile?.farm_size;
-  const realCrops = userProfile?.profile?.main_crops || [];
-  const realRegion = realDistrict
-    ? `${realDistrict}, ${countryKey.charAt(0).toUpperCase()+countryKey.slice(1)}`
-    : t.region;
-  const realFarm = realFarmSize && realCrops.length > 0
-    ? `${realFarmSize} ha · ${realCrops.slice(0,2).join(' & ')}`
-    : realFarmSize
-    ? `${realFarmSize} ha`
-    : realCrops.length > 0
-    ? realCrops.slice(0,2).join(' & ')
-    : t.farm;
+  // The signed-in farmer's own details - never demo data
+  const profile = userProfile || null;
+  const uid = (profile && profile.id) || null;
+  const realName = ((profile && profile.full_name) || '').trim();
+  const realFirstName = realName.split(' ')[0] || '';
+  const realDistrict = (profile && profile.profile && profile.profile.district) || '';
+  const realFarmSize = profile && profile.profile && profile.profile.farm_size;
+  const realCrops = (profile && profile.profile && profile.profile.main_crops) || [];
+  const countryName = countryKey.charAt(0).toUpperCase()+countryKey.slice(1);
+  const realRegion = realDistrict ? `${realDistrict}, ${countryName}` : countryName;
+  const realFarm = [fmtFarmSize(realFarmSize), realCrops.slice(0,2).join(' & ')].filter(Boolean).join(' · ');
+  const initials = realName ? realName.split(' ').filter(Boolean).map(n=>n[0]).join('').toUpperCase().slice(0,2) : '👤';
+  const pi = planInfo(profile);
+
+  // Alerts for the farmer's area (null = still loading, false = could not check)
+  const [alerts, setAlerts] = useState(null);
+  React.useEffect(()=>{
+    if(!uid) return;   // wait until we know who is logged in
+    let alive = true;
+    api.get('/api/weather/alerts/').then(d=>{ if(alive) setAlerts(Array.isArray(d) ? d : false); });
+    return ()=>{ alive = false; };
+  },[uid, realDistrict]);
 
   const sidebarItems = [
     {id:'home',icon:'home',label:ui.home},
@@ -2361,7 +2581,7 @@ const WebApp = ({countryKey, langKey, onLogout, userProfile}) => {
   ];
 
   const renderPage = () => {
-    const props = {t,m,ck:countryKey,lang,setLang,lcode,realName,realFirstName,realRegion,realFarm,realCrops,onLogout};
+    const props = {t,m,ck:countryKey,lang,setLang,lcode,profile,uid,realName,realFirstName,realDistrict,realRegion,realFarm,realCrops,alerts,onLogout,goTo:setTab};
     switch(tab){
       case 'home':     return <Dashboard {...props}/>;
       case 'crops':    return <CropsPage {...props}/>;
@@ -2395,8 +2615,8 @@ const WebApp = ({countryKey, langKey, onLogout, userProfile}) => {
             <button className={`nlt-btn${lang!=='en'?' on':''}`} onClick={()=>setLang(lcode)}>{lcode.toUpperCase()}</button>
           </div>
           <div className="nav-country-badge"><span>{m.flag}</span>{countryKey.charAt(0).toUpperCase()+countryKey.slice(1)}</div>
-          <div className="nav-notif"><Ic n="bell" sz={16} s="#6b7280" sw={2}/><div className="notif-dot"/></div>
-          <div className="nav-avatar" style={{background:m.color}}>{realName ? realName.split(" ").map(n=>n[0]).join("").toUpperCase().slice(0,2) : m.initials}</div>
+          <div className="nav-notif" style={{cursor:'pointer'}} title={Array.isArray(alerts) && alerts.length ? `${alerts.length} alert${alerts.length>1?'s':''} for your area` : 'No alerts for your area'} onClick={()=>setTab('home')}><Ic n="bell" sz={16} s="#6b7280" sw={2}/>{Array.isArray(alerts) && alerts.length > 0 && <div className="notif-dot"/>}</div>
+          <div className="nav-avatar" style={{background:m.color}}>{initials}</div>
           <button onClick={onLogout} style={{background:'none',border:'1px solid #e5e7eb',borderRadius:8,padding:'6px 10px',display:'flex',alignItems:'center',gap:6,fontSize:12,fontWeight:500,color:'#6b7280',cursor:'pointer'}}><Ic n="logout" sz={14} s="#6b7280" sw={2}/>Logout</button>
         </div>
       </div>
@@ -2413,8 +2633,8 @@ const WebApp = ({countryKey, langKey, onLogout, userProfile}) => {
           ))}
           <div className="sb-spacer"/>
           <div className="sb-footer">
-            <div className="sb-footer-name">{realFirstName||t.name.split(' ')[0]}</div>
-            <div className="sb-footer-plan">Free plan · Upgrade →</div>
+            <div className="sb-footer-name">{realFirstName || 'My account'}</div>
+            <div className="sb-footer-plan" style={{cursor:'pointer'}} onClick={()=>setTab('plans')}>{pi.plan === 'free' ? 'Free plan · Upgrade →' : `${pi.name}${pi.until ? ' · until ' + pi.until : ''}`}</div>
           </div>
         </div>
         <div className="content-area" style={{paddingBottom: isMobile ? 80 : 0}}>
@@ -2460,21 +2680,23 @@ const WebApp = ({countryKey, langKey, onLogout, userProfile}) => {
 /* ══ ROOT APP ══ */
 const App = () => {
   const {useState, useCallback, useEffect} = React;
+  const countryMap = {KE:'kenya',UG:'uganda',TZ:'tanzania',RW:'rwanda',ET:'ethiopia'};
+  const readCachedProfile = () => { try { return JSON.parse(localStorage.getItem('agri_profile')||'null'); } catch(e) { return null; } };
+  const cacheProfile = (p) => { try { localStorage.setItem('agri_profile', JSON.stringify(p)); } catch(e) {} };
+
+  // On a returning visit, show the last known profile straight away (works offline too)
+  const [userProfile, setUserProfile] = useState(() => Auth.getToken() ? readCachedProfile() : null);
   const [session, setSession] = useState(()=>{
-    // Auto-restore session from localStorage on page refresh
-    const token = localStorage.getItem('agri_access');
-    if(token) return {country:'rwanda', lang:'en'}; // will be updated when profile loads
-    return null;
+    if(!Auth.getToken()) return null;
+    const p = readCachedProfile();
+    return {country: (p && countryMap[p.country]) || 'rwanda', lang: (p && p.language) || 'en'};
   });
-  const [userProfile, setUserProfile] = useState(null);
 
   const handleLogin = useCallback((country,lang)=>{
     const userData = window._agriUserData || null;
-    // Use country from user data if available, otherwise use passed country
-    const countryMap = {KE:'kenya',UG:'uganda',TZ:'tanzania',RW:'rwanda',ET:'ethiopia'};
     const realCountry = userData?.country ? (countryMap[userData.country]||country) : country;
     setSession({country:realCountry, lang:userData?.language||lang});
-    if(userData) setUserProfile(userData);
+    if(userData && userData.id){ setUserProfile(userData); cacheProfile(userData); }
   },[]);
 
   const handleLogout = useCallback(()=>{
@@ -2484,29 +2706,39 @@ const App = () => {
     window._agriUserData = null;
   },[]);
 
-  // Load profile from API when logged in
+  // Load the profile from the server (also used after a scan or a profile edit)
+  const loadProfile = useCallback(async ()=>{
+    if(!Auth.getToken()) return;
+    // Farm details from sign-up that could not be saved on a weak connection are sent now
+    let pending = null;
+    try { pending = JSON.parse(localStorage.getItem('agri_pending_profile')||'null'); } catch(e) {}
+    if(pending){
+      try { await api.put('/api/auth/profile/', pending); localStorage.removeItem('agri_pending_profile'); } catch(e) {}
+    }
+    const profile = await api.get('/api/auth/profile/');
+    if(profile && profile.id){
+      setUserProfile(profile);
+      cacheProfile(profile);
+      window._agriUserData = profile;
+      setSession(s => s ? ({...s, country: countryMap[profile.country] || s.country, lang: profile.language || s.lang}) : s);
+    } else if(profile && profile._status === 401){
+      handleLogout();
+    }
+    // No network or a server error: keep showing the last known profile
+  },[handleLogout]);
+
+  useEffect(()=>{ if(session) loadProfile(); },[!!session]);
+
   useEffect(()=>{
-    if(!session) return;
-    const token = Auth.getToken();
-    if(!token) return;
-    api.get('/api/auth/profile/', token)
-      .then(profile=>{
-        if(profile && !profile.detail && !profile.code) {
-          setUserProfile(profile);
-          // Update session country from real profile
-          const countryMap = {KE:'kenya',UG:'uganda',TZ:'tanzania',RW:'rwanda',ET:'ethiopia'};
-          const realCountry = countryMap[profile.country] || 'rwanda';
-          const realLang = profile.language || 'en';
-          setSession(s => ({...s, country:realCountry, lang:realLang}));
-          window._agriUserData = profile;
-        } else {
-          // Token invalid - clear and show login
-          Auth.clear();
-          setSession(null);
-        }
-      })
-      .catch(()=>{});
-  },[session?.country]);
+    const onLogoutEvt = () => handleLogout();
+    const onRefreshEvt = () => loadProfile();
+    window.addEventListener('agri-logout', onLogoutEvt);
+    window.addEventListener('agri-profile-refresh', onRefreshEvt);
+    return () => {
+      window.removeEventListener('agri-logout', onLogoutEvt);
+      window.removeEventListener('agri-profile-refresh', onRefreshEvt);
+    };
+  },[handleLogout, loadProfile]);
 
   if(!session) return <Login onLogin={handleLogin}/>;
   return <WebApp countryKey={session.country} langKey={session.lang} onLogout={handleLogout} userProfile={userProfile}/>;
