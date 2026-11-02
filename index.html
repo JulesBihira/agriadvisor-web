@@ -1189,7 +1189,7 @@ const Login = ({onLogin}) => {
     if(!form.email||!form.password){setError('Please fill in all fields');return;}
     setLoading(true); setError('');
     try {
-      const res = await api.post('/api/auth/email-login/', {email:form.email, password:form.password});
+      const res = await api.post('/api/auth/email-login/', {email:form.email.trim().toLowerCase(), password:form.password});
       Auth.saveTokens(res.access, res.refresh);
       window._agriUserData = res.user;
       setLoading(false);
@@ -1300,8 +1300,8 @@ const Login = ({onLogin}) => {
                       </div>
                     </div>
                     <div className="lf-row">
-                      <label className="lf-remember"><input type="checkbox"/> Remember me</label>
-                      <span className="lf-forgot">Forgot password?</span>
+                      <span/>
+                      <span className="lf-forgot" style={{cursor:'pointer'}} onClick={()=>{setAuthMode('phone');setError('Forgot your password? Sign in with your phone number to get a code, then set a new password in Settings › Email login.');}}>Forgot password?</span>
                     </div>
                     <button className="lf-submit" type="submit" disabled={loading}>{loading?'Signing in…':'Sign in →'}</button>
                     <div className="lf-divider">or use phone OTP</div>
@@ -1474,6 +1474,9 @@ const Login = ({onLogin}) => {
                 }
                 // Weak connection: keep the farm details and send them as soon as the app is online
                 if(!profileSaved){ try { localStorage.setItem('agri_pending_profile', JSON.stringify(profileData)); } catch(e) {} }
+                if(profileSaved && form.email && form.email.includes('@')){
+                  try { const withEmail = await api.put('/api/auth/profile/', {email: form.email.trim().toLowerCase()}, token); if(withEmail && withEmail.id) window._agriUserData = withEmail; } catch(e) {}
+                }
                 setLoading(false);
                 const countryMap = {ke:'kenya',ug:'uganda',tz:'tanzania',rw:'rwanda',et:'ethiopia'};
                 const userCountry = window._agriUserData?.country?.toLowerCase()||'ke';
@@ -2314,6 +2317,71 @@ const PlansPage = ({t,m,ck}) => (
   </div>
 );
 
+/* ══ EMAIL LOGIN (settings) ══ */
+const EmailLoginPanel = ({profile}) => {
+  const current = (profile && profile.email) || '';
+  const isOn = !!(profile && profile.email && profile.has_password);
+  const [email, setEmail] = useState(current);
+  const [pw, setPw] = useState('');
+  const [pw2, setPw2] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState(null);
+  React.useEffect(()=>{ setEmail(current); },[current]);
+
+  const save = async () => {
+    setMsg(null);
+    const e = email.trim().toLowerCase();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return setMsg({ok:false, text:'Enter a valid email address.'});
+    if(pw.length < 8) return setMsg({ok:false, text:'Use a password of at least 8 characters.'});
+    if(/^\d+$/.test(pw)) return setMsg({ok:false, text:'Use letters as well as numbers in your password.'});
+    if(pw !== pw2) return setMsg({ok:false, text:'The two passwords do not match.'});
+    setBusy(true);
+    try {
+      await api.post('/api/auth/email-password/', {email: e, password: pw}, true);
+      setPw(''); setPw2('');
+      setMsg({ok:true, text:`Done. You can now sign in with ${e} and this password, or with your phone number as before.`});
+      window.dispatchEvent(new Event('agri-profile-refresh'));
+    } catch(err) {
+      setMsg({ok:false, text: err.message || 'Could not save. Please try again.'});
+    }
+    setBusy(false);
+  };
+
+  const inputStyle = {width:'100%',padding:'10px 12px',border:'1.5px solid #e5e7eb',borderRadius:8,fontSize:14,outline:'none'};
+  const labelStyle = {fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:4};
+  return (
+    <div className="sp-section">
+      <div className="sp-section-title">Email login</div>
+      <div style={{fontSize:13,color:'#374151',marginBottom:14,lineHeight:1.6}}>
+        {isOn
+          ? <>Email login is <strong>on</strong> for <strong>{current}</strong>. You can also still sign in with a code sent to your phone.</>
+          : <>Add an email and password to sign in without waiting for an SMS code. Your phone number keeps working too.</>}
+      </div>
+      {msg && <div style={{fontSize:12,padding:'8px 12px',borderRadius:8,marginBottom:12,background:msg.ok?'#f0fdf4':'#fef2f2',color:msg.ok?'#15803d':'#b91c1c'}}>{msg.ok?'✅ ':'❌ '}{msg.text}</div>}
+      <div style={{display:'flex',flexDirection:'column',gap:12}}>
+        <div>
+          <label style={labelStyle}>Email address</label>
+          <input style={inputStyle} type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@email.com"/>
+        </div>
+        <div>
+          <label style={labelStyle}>{isOn ? 'New password' : 'Password'}</label>
+          <input style={inputStyle} type={showPw?'text':'password'} autoComplete="new-password" value={pw} onChange={e=>setPw(e.target.value)} placeholder="At least 8 characters"/>
+        </div>
+        <div>
+          <label style={labelStyle}>Type the password again</label>
+          <input style={inputStyle} type={showPw?'text':'password'} autoComplete="new-password" value={pw2} onChange={e=>setPw2(e.target.value)}/>
+        </div>
+        <label style={{fontSize:12,color:'#6b7280',display:'flex',gap:6,alignItems:'center'}}><input type="checkbox" checked={showPw} onChange={e=>setShowPw(e.target.checked)}/> Show password</label>
+        <button onClick={save} disabled={busy} style={{background:'#15803d',color:'#fff',border:'none',borderRadius:8,padding:'11px',fontSize:14,fontWeight:600,cursor:'pointer'}}>
+          {busy ? 'Saving…' : isOn ? 'Change email or password' : 'Turn on email login'}
+        </button>
+        <div style={{fontSize:12,color:'#6b7280'}}>Forgot your password? Sign in with your phone number, then set a new one here.</div>
+      </div>
+    </div>
+  );
+};
+
 /* ══ SETTINGS PAGE ══ */
 const SettingsPage = ({t,m,ck,lang,setLang,profile,realName,realDistrict,realCrops,realRegion,alerts,onLogout,goTo}) => {
   const [activeNav,setActiveNav]=useState('profile');
@@ -2373,7 +2441,7 @@ const SettingsPage = ({t,m,ck,lang,setLang,profile,realName,realDistrict,realCro
       <div className="page-header"><div className="page-title">{t.ui.settings}</div><div className="page-sub">Manage your account and preferences</div></div>
       <div className="settings-grid">
         <div className="settings-nav">
-          {[{id:'profile',icon:'user',label:'Profile'},{id:'notifications',icon:'bell',label:'Notifications'},{id:'language',icon:'globe',label:'Language'},{id:'subscription',icon:'star',label:'Subscription'}].map(item=>(
+          {[{id:'profile',icon:'user',label:'Profile'},{id:'security',icon:'mail',label:'Email login'},{id:'notifications',icon:'bell',label:'Notifications'},{id:'language',icon:'globe',label:'Language'},{id:'subscription',icon:'star',label:'Subscription'}].map(item=>(
             <div key={item.id} className={`sn-item${activeNav===item.id?' active':''}`} onClick={()=>setActiveNav(item.id)}>
               <Ic n={item.icon} sz={15} s="currentColor" sw={2}/>{item.label}
             </div>
@@ -2429,6 +2497,7 @@ const SettingsPage = ({t,m,ck,lang,setLang,profile,realName,realDistrict,realCro
                   {[
                     ['Full name', realName || 'Not set'],
                     ['Phone', (profile && profile.phone) || ''],
+                    ['Email', (profile && profile.email) || 'Not set'],
                     ['Country', ck.charAt(0).toUpperCase()+ck.slice(1)],
                     ['District', realDistrict || 'Not set'],
                     ['Farm size', fmtFarmSize(p.farm_size) || 'Not set'],
@@ -2442,6 +2511,7 @@ const SettingsPage = ({t,m,ck,lang,setLang,profile,realName,realDistrict,realCro
               </div>
             </div>
           )}
+          {activeNav==='security'&&(<EmailLoginPanel profile={profile}/>)}
           {activeNav==='notifications'&&(
             <div>
               <div className="sp-section">
