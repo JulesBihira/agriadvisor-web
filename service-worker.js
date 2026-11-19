@@ -1,5 +1,5 @@
 const CACHE_NAME = 'agriadvisor-v1';
-const STATIC_CACHE = 'agriadvisor-static-v2';
+const STATIC_CACHE = 'agriadvisor-static-v3';
 const API_CACHE = 'agriadvisor-api-v2';
 
 // Files to cache for offline use
@@ -116,6 +116,10 @@ self.addEventListener('fetch', event => {
     return;
   }
 
+  // The prepared app file (/app.<id>.js) never changes once published: keep it,
+  // and drop older copies so phones don't fill up
+  const isAppFile = url.origin === self.location.origin && /^\/app\.[0-9a-f]+\.js$/.test(url.pathname);
+
   // Static files — cache first, fall back to network
   event.respondWith(
     caches.match(event.request).then(cached => {
@@ -125,6 +129,12 @@ self.addEventListener('fetch', event => {
           const clone = response.clone();
           caches.open(STATIC_CACHE).then(cache => {
             cache.put(event.request, clone);
+            if (isAppFile) {
+              cache.keys().then(keys => keys.forEach(req => {
+                const p = new URL(req.url).pathname;
+                if (/^\/app\.[0-9a-f]+\.js$/.test(p) && p !== url.pathname) cache.delete(req);
+              }));
+            }
           });
         }
         return response;
