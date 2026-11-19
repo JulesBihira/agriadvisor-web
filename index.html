@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="theme-color" content="#15803d"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -17,7 +17,6 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"/>
 <meta name="version" content="2.1.0"/>
 <!-- AgriAdvisor v6.0.0 - Improved Farm Profile -->
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>AgriAdvisor — Smart Farming for East Africa</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;1,300;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
@@ -521,6 +520,92 @@ a{color:inherit;text-decoration:none}
   .app-sidebar,.sidebar{display:none !important}
 }
 @media(min-width:901px){.p-nav{display:none !important}}
+
+/* ══════════════════════════════════════════════════════════════
+   PHONE LAYOUT (Nov 2026)
+   - the header fits the screen, so the browser no longer zooms the app out
+   - one bottom menu, with Crop Doctor as the big centre button
+   - the page scrolls normally (works best on iPhone Safari)
+   - bigger text and buttons, no zoom-in when typing
+══════════════════════════════════════════════════════════════ */
+.mbar{display:none}
+@media(max-width:900px){
+  html{-webkit-text-size-adjust:100%}
+  .app-root{height:auto !important;min-height:100vh;min-height:100dvh}
+  .app-layout{display:block}
+  .content-area{overflow:visible !important;overflow-x:hidden !important;padding:16px 16px calc(96px + env(safe-area-inset-bottom)) !important}
+  .p-nav,#p-nav-bar,#native-mob-nav,#mobile-bottom-nav{display:none !important}
+
+  /* Bottom menu */
+  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:9000;background:#fff;border-top:1px solid #e5e7eb;box-shadow:0 -4px 16px rgba(0,0,0,.06);padding:0 4px env(safe-area-inset-bottom);height:calc(64px + env(safe-area-inset-bottom))}
+  .mbar-btn{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;padding:6px 2px;color:#6b7280;cursor:pointer;-webkit-tap-highlight-color:transparent;font-family:inherit}
+  .mbar-btn.on{color:#15803d}
+  .mbar-btn:active{opacity:.6}
+  .mbar-lbl{font-size:11px;font-weight:600;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mbar-btn.on .mbar-lbl{font-weight:700}
+  .mbar-scan{justify-content:flex-end;padding-bottom:8px}
+  .mbar-scan-ring{width:56px;height:56px;border-radius:50%;background:#15803d;display:flex;align-items:center;justify-content:center;margin-top:-28px;border:4px solid #fff;box-shadow:0 6px 16px rgba(21,128,61,.35)}
+  .mbar-scan.on .mbar-scan-ring{background:#166534}
+  .mbar-scan .mbar-lbl{color:#15803d}
+  #pwa-install-banner{bottom:calc(84px + env(safe-area-inset-bottom)) !important}
+
+  /* Home: everything in one column */
+  .dash-two{grid-template-columns:1fr !important;gap:12px !important;margin-bottom:12px !important}
+  .stat-cards{gap:10px !important;margin-bottom:12px !important}
+  .stat-card{padding:14px !important;border-radius:14px !important}
+  .sc-icon{width:32px;height:32px;margin-bottom:10px}
+  .sc-val{font-size:24px}
+  .sc-lbl{font-size:13px}
+  .sc-trend{font-size:12.5px}
+
+  /* Crop tables become stacked rows */
+  .crop-table thead{display:none}
+  .crop-table,.crop-table tbody{display:block;width:100%}
+  .crop-table tr{display:grid;grid-template-columns:1fr auto;column-gap:12px;row-gap:8px;align-items:center;padding:14px 0;border-bottom:1px solid #f3f4f6}
+  .crop-table tr:last-child{border-bottom:none}
+  .crop-table td{display:block;padding:0 !important;border:none !important}
+  .crop-table .crop-prog-bg{width:100% !important}
+  .ct-full td:nth-child(1){grid-column:1;grid-row:1}
+  .ct-full td:nth-child(4){grid-column:2;grid-row:1}
+  .ct-full td:nth-child(2){grid-column:1 / -1;grid-row:2;font-size:13px !important}
+  .ct-full td:nth-child(3){grid-column:1;grid-row:3}
+  .ct-full td:nth-child(5){grid-column:2;grid-row:3}
+  .ct-dash td:nth-child(1){grid-column:1 / -1}
+  .ct-dash td:nth-child(2){grid-column:1}
+  .ct-dash td:nth-child(3){grid-column:2;display:flex !important}
+  .crop-table td[colspan]{grid-column:1 / -1 !important;grid-row:auto !important}
+  .crop-table td button{min-height:34px;padding:6px 12px !important;font-size:12px !important}
+  .crop-row-detail{font-size:12.5px;line-height:1.45}
+  .ai-sub{font-size:13px}
+  .ai-time{font-size:12px}
+  .badge{font-size:12px}
+
+  /* Crop Doctor: big photo buttons */
+  .scan-upload-zone{padding:28px 16px !important;border-radius:18px !important}
+  .suz-icon{width:64px;height:64px;margin-bottom:14px}
+  .suz-title{font-size:21px}
+  .suz-btn{flex:1 1 0;margin-top:12px !important;padding:14px 10px !important;min-height:54px;font-size:15px !important;border-radius:12px !important}
+}
+@media(max-width:768px){
+  /* Header that fits a phone */
+  .topnav{gap:8px !important;padding:0 12px !important;padding-top:env(safe-area-inset-top) !important;height:calc(56px + env(safe-area-inset-top)) !important}
+  .nav-divider,.nav-country-badge,.nav-logout,.nav-tabs{display:none !important}
+  .nav-logo{min-width:0}
+  .nav-right{margin-left:auto;gap:8px !important}
+  .nav-lang-toggle{background:rgba(255,255,255,.18) !important}
+  .nlt-btn{font-size:12px;padding:7px 10px;color:rgba(255,255,255,.9)}
+  .nlt-btn.on{background:#fff;color:#15803d}
+  .nav-notif{width:40px;height:40px;border-color:rgba(255,255,255,.4) !important}
+  .nav-notif svg{stroke:#fff}
+  .notif-dot{border-color:#1d9e75}
+  .nav-avatar{width:40px !important;height:40px !important;font-size:13px !important;border:2px solid rgba(255,255,255,.6)}
+
+  /* Typing: 16px text stops iPhone zooming in on every field */
+  input:not([type=checkbox]):not([type=radio]):not(.otp-box),select,textarea{font-size:16px !important}
+}
+@media(max-width:350px){
+  .nav-logo-name{display:none}
+}
 </style>
 </head>
 <body>
@@ -1126,7 +1211,7 @@ const Login = ({onLogin}) => {
   const [otpError, setOtpError] = useState(false);
   const [country, setCountry] = useState(null);
   const [lang, setLang] = useState(null);
-  const [dial, setDial] = useState('+254');
+  const [dial, setDial] = useState('+250');
   const [form, setForm] = useState({email:'', password:'', name:'', phone:''});
   const countryKeys = ['kenya','uganda','tanzania','rwanda','ethiopia'];
 
@@ -1702,7 +1787,7 @@ const Dashboard = ({t,m,ck,lang,profile,uid,realFirstName,realRegion,realDistric
         </div>
       ))}
     </div>
-    <div style={{display:'grid',gridTemplateColumns:'1.6fr 1fr',gap:20,marginBottom:20}}>
+    <div className="dash-two" style={{display:'grid',gridTemplateColumns:'1.6fr 1fr',gap:20,marginBottom:20}}>
       <div className="card">
         <div className="card-header"><div className="card-title">{t.ui.crops}</div><button className="card-action" onClick={()=>goTo && goTo('settings')}>{t.ui.addCrop}</button></div>
         {crops.length === 0 ? (
@@ -1711,7 +1796,7 @@ const Dashboard = ({t,m,ck,lang,profile,uid,realFirstName,realRegion,realDistric
             <button onClick={()=>goTo && goTo('settings')} style={{display:'block',marginTop:10,background:'#15803d',color:'#fff',border:'none',borderRadius:8,padding:'9px 14px',fontSize:13,fontWeight:600,cursor:'pointer'}}>Add my crops</button>
           </div>
         ) : (
-        <table className="crop-table" style={{width:'100%'}}>
+        <table className="crop-table ct-dash" style={{width:'100%'}}>
           <thead><tr><th>Crop</th><th>Progress</th><th>Status</th></tr></thead>
           <tbody>
           {crops.map((crop,i)=>{
@@ -1825,7 +1910,7 @@ const CropsPage = ({t,m,ck,uid,realCrops,realRegion,lang,goTo}) => {
             <button onClick={()=>goTo && goTo('settings')} style={{display:'block',marginTop:10,background:'#15803d',color:'#fff',border:'none',borderRadius:8,padding:'9px 14px',fontSize:13,fontWeight:600,cursor:'pointer'}}>Add my crops</button>
           </div>
         ) : (
-        <table className="crop-table" style={{width:'100%'}}>
+        <table className="crop-table ct-full" style={{width:'100%'}}>
           <thead><tr><th>Crop</th><th>Planting / Harvest</th><th>Progress</th><th>Status</th><th></th></tr></thead>
           <tbody>
           {crops.map((name,i)=>{
@@ -2004,6 +2089,7 @@ const ScanPage = ({t,m,ck,realCrops,profile}) => {
   const [scanHistory,setScanHistory] = useState([]);
   const [errorMsg,setErrorMsg] = useState('');
   const fileRef = useRef(null);
+  const galleryRef = useRef(null);
   const planNow = planInfo(profile);
   // Earlier scans saved on this account
   React.useEffect(()=>{
@@ -2138,10 +2224,12 @@ const ScanPage = ({t,m,ck,realCrops,profile}) => {
       {stage==='upload' && (
         <div>
           <div className="scan-upload-zone"
-            onClick={()=>fileRef.current?.click()}
+            onClick={()=>galleryRef.current?.click()}
             onDrop={handleDrop}
             onDragOver={e=>e.preventDefault()}>
             <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{display:'none'}}
+              onChange={e=>handleFileSelect(e.target.files[0])}/>
+            <input ref={galleryRef} type="file" accept="image/*" style={{display:'none'}}
               onChange={e=>handleFileSelect(e.target.files[0])}/>
             <div className="suz-icon"><Ic n="cam" sz={36} s="#15803d" sw={1.5}/></div>
             <div className="suz-title">{t.ui.scanTitle}</div>
@@ -2152,7 +2240,7 @@ const ScanPage = ({t,m,ck,realCrops,profile}) => {
                 📷 Take photo
               </button>
               <button className="suz-btn" style={{background:'#f0fdf4',color:'#15803d',border:'1.5px solid #bbf7d0'}}
-                onClick={e=>{e.stopPropagation();fileRef.current?.click();}}>
+                onClick={e=>{e.stopPropagation();galleryRef.current?.click();}}>
                 🖼 Upload image
               </button>
             </div>
@@ -2862,8 +2950,8 @@ const WebApp = ({countryKey, langKey, onLogout, userProfile}) => {
           </div>
           <div className="nav-country-badge"><span>{m.flag}</span>{countryKey.charAt(0).toUpperCase()+countryKey.slice(1)}</div>
           <div className="nav-notif" style={{cursor:'pointer'}} title={Array.isArray(alerts) && alerts.length ? `${alerts.length} alert${alerts.length>1?'s':''} for your area` : 'No alerts for your area'} onClick={()=>setTab('home')}><Ic n="bell" sz={16} s="#6b7280" sw={2}/>{Array.isArray(alerts) && alerts.length > 0 && <div className="notif-dot"/>}</div>
-          <div className="nav-avatar" style={{background:m.color}}>{initials}</div>
-          <button onClick={onLogout} style={{background:'none',border:'1px solid #e5e7eb',borderRadius:8,padding:'6px 10px',display:'flex',alignItems:'center',gap:6,fontSize:12,fontWeight:500,color:'#6b7280',cursor:'pointer'}}><Ic n="logout" sz={14} s="#6b7280" sw={2}/>Logout</button>
+          <div className="nav-avatar" style={{background:m.color,cursor:'pointer'}} title="My account" onClick={()=>setTab('settings')}>{initials}</div>
+          <button className="nav-logout" onClick={onLogout} style={{background:'none',border:'1px solid #e5e7eb',borderRadius:8,padding:'6px 10px',display:'flex',alignItems:'center',gap:6,fontSize:12,fontWeight:500,color:'#6b7280',cursor:'pointer'}}><Ic n="logout" sz={14} s="#6b7280" sw={2}/>Logout</button>
         </div>
       </div>
 
@@ -2888,37 +2976,24 @@ const WebApp = ({countryKey, langKey, onLogout, userProfile}) => {
         </div>
       </div>
 
-      {/* MOBILE BOTTOM NAV */}
-      <div id="mobile-bottom-nav" style={{
-        position:'fixed', bottom:0, left:0, right:0,
-        height:'calc(68px + env(safe-area-inset-bottom))',
-        paddingBottom:'env(safe-area-inset-bottom)',
-        background:'#ffffff', borderTop:'1.5px solid #e5e7eb',
-        display: 'flex',
-        alignItems:'stretch',
-        boxShadow:'0 -4px 16px rgba(0,0,0,0.08)',
-        zIndex:9999,
-        WebkitTransform:'translateZ(0)'
-      }}>
-        {sidebarItems.slice(0,5).map(item=>(
-          <button key={item.id}
-            style={{
-              flex:1, display:'flex', flexDirection:'column',
-              alignItems:'center', justifyContent:'center',
-              gap:3, border:'none', background:'none',
-              color: tab===item.id ? '#15803d' : '#9ca3af',
-              fontSize:10, fontWeight: tab===item.id ? 700 : 500,
-              padding:'6px 4px', cursor:'pointer',
-              WebkitTapHighlightColor:'transparent',
-              position:'relative'
-            }}
-            onClick={()=>setTab(item.id)}>
-            <Ic n={item.icon} sz={26} s={tab===item.id?'#15803d':'#9ca3af'} sw={tab===item.id?2.5:2}/>
-            {item.badge&&<span style={{position:'absolute',top:4,right:'20%',background:'#15803d',color:'#fff',fontSize:9,fontWeight:700,padding:'1px 4px',borderRadius:8}}>{item.badge}</span>}
-            <span>{item.label}</span>
-          </button>
-        ))}
-      </div>
+      {/* PHONE BOTTOM MENU (shown up to 900px wide by CSS; Crop Doctor in the middle) */}
+      <nav className="mbar" aria-label="Main menu">
+        {sidebarItems.filter(item=>['home','crops','scan','market','settings'].includes(item.id)).map(item=>{
+          const on = tab===item.id;
+          if(item.id==='scan') return (
+            <button key={item.id} className={`mbar-btn mbar-scan${on?' on':''}`} onClick={()=>setTab(item.id)} aria-current={on?'page':undefined}>
+              <span className="mbar-scan-ring"><Ic n={item.icon} sz={26} s="#fff" sw={2.2}/></span>
+              <span className="mbar-lbl">{item.label}</span>
+            </button>
+          );
+          return (
+            <button key={item.id} className={`mbar-btn${on?' on':''}`} onClick={()=>setTab(item.id)} aria-current={on?'page':undefined}>
+              <Ic n={item.icon} sz={24} s={on?'#15803d':'#6b7280'} sw={on?2.4:2}/>
+              <span className="mbar-lbl">{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 };
@@ -3003,64 +3078,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 
 <script>
-// Native mobile nav fallback - renders after React loads
-(function() {
-  function injectMobileNav() {
-    // Only on mobile
-    if (window.innerWidth > 768) return;
-    // Don't inject twice
-    if (document.getElementById('native-mob-nav')) return;
-    // Only when logged in (app-body exists)
-    if (!document.querySelector('.app-body')) return;
-    
-    const tabs = [
-      {id:'home', label:'Home', icon:'🏠'},
-      {id:'crops', label:'Crops', icon:'🌱'},
-      {id:'scan', label:'Scan', icon:'🔬'},
-      {id:'market', label:'Markets', icon:'📊'},
-      {id:'settings', label:'Settings', icon:'⚙️'},
-    ];
-    
-    const nav = document.createElement('div');
-    nav.id = 'native-mob-nav';
-    nav.style.cssText = 'position:fixed;bottom:0;left:0;right:0;height:70px;background:#fff;border-top:1.5px solid #e5e7eb;z-index:9999;display:flex;align-items:stretch;box-shadow:0 -2px 12px rgba(0,0,0,.1)';
-    
-    tabs.forEach(function(tab) {
-      const btn = document.createElement('button');
-      btn.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;font-size:10px;font-weight:500;color:#9ca3af;padding:8px 4px;cursor:pointer;-webkit-tap-highlight-color:transparent;min-height:44px';
-      btn.innerHTML = '<span style="font-size:24px;line-height:1">' + tab.icon + '</span><span>' + tab.label + '</span>';
-      btn.onclick = function() {
-        // Dispatch custom event to React
-        window.dispatchEvent(new CustomEvent('agri-set-tab', {detail: tab.id}));
-        // Update active styles
-        nav.querySelectorAll('button').forEach(function(b) {
-          b.style.color = '#9ca3af';
-        });
-        btn.style.color = '#15803d';
-      };
-      nav.appendChild(btn);
-    });
-    
-    document.body.appendChild(nav);
-    document.body.style.paddingBottom = '70px';
-    console.log('[AgriAdvisor] Native nav injected');
-  }
-  
-  // Try immediately and keep trying until app loads
-  var attempts = 0;
-  var interval = setInterval(function() {
-    attempts++;
-    injectMobileNav();
-    if (document.getElementById('native-mob-nav') || attempts > 20) {
-      clearInterval(interval);
-    }
-  }, 500);
-  
-  // Also try on route changes
-  window.addEventListener('agri-set-tab', function() {
-    setTimeout(injectMobileNav, 100);
-  });
-})();
 
 // Native mobile nav fallback - renders after React loads
 document.addEventListener('DOMContentLoaded', function() {
@@ -3138,76 +3155,5 @@ window.addEventListener('appinstalled', () => {
 </div>
 
 
-<!-- Mobile Bottom Nav - Pure HTML onclick, outside React -->
-<div class="p-nav" id="p-nav-bar">
-  <div class="p-nav-inner">
-    <button class="p-nb active" id="pnb-home" onclick="pNavGo('home')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-      <span>Home</span>
-    </button>
-    <button class="p-nb" id="pnb-crops" onclick="pNavGo('crops')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22V12M12 12C12 7 7 4 2 4c0 5 3 9 10 8M12 12c0-5 5-8 10-8 0 5-3 9-10 8"/></svg>
-      <span>Crops</span>
-    </button>
-    <button class="p-nb" id="pnb-scan" onclick="pNavGo('scan')" style="position:relative">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <span class="p-nb-badge">AI</span>
-      <span>Scan</span>
-    </button>
-    <button class="p-nb" id="pnb-market" onclick="pNavGo('market')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      <span>Markets</span>
-    </button>
-    <button class="p-nb" id="pnb-settings" onclick="pNavGo('settings')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      <span>Settings</span>
-    </button>
-  </div>
-</div>
-
-<script>
-// Pure vanilla JS nav - no React, works on all browsers including Safari iOS
-var _pNavActive = 'home';
-
-function pNavGo(tab) {
-  _pNavActive = tab;
-  // Update button styles
-  ['home','crops','scan','market','settings'].forEach(function(t) {
-    var btn = document.getElementById('pnb-'+t);
-    if (!btn) return;
-    if (t === tab) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
-  });
-  // Tell React to change tab
-  window.dispatchEvent(new CustomEvent('agri-set-tab', {detail: tab}));
-}
-
-// Listen for React tab changes (e.g. from sidebar clicks on desktop)
-window.addEventListener('agri-set-tab', function(e) {
-  var tab = e.detail;
-  ['home','crops','scan','market','settings'].forEach(function(t) {
-    var btn = document.getElementById('pnb-'+t);
-    if (!btn) return;
-    if (t === tab) { btn.classList.add('active'); }
-    else { btn.classList.remove('active'); }
-  });
-});
-
-// Show nav when logged in
-var _pNavInterval = setInterval(function() {
-  var nav = document.getElementById('p-nav-bar');
-  if (!nav) return;
-  // Show if app-layout or app-body is visible (user logged in)
-  var appBody = document.querySelector('.app-layout') || document.querySelector('.content-area');
-  if (appBody) {
-    nav.style.display = 'block';
-    document.body.style.paddingBottom = 'calc(66px + env(safe-area-inset-bottom))';
-    clearInterval(_pNavInterval);
-  }
-}, 400);
-</script>
 </body>
 </html>
