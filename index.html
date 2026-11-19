@@ -2296,26 +2296,202 @@ const ScanPage = ({t,m,ck,realCrops,profile}) => {
 };
 
 /* ══ PLANS PAGE ══ */
-const PlansPage = ({t,m,ck}) => (
-  <div className="fade-up">
-    <div className="page-header"><div className="page-title">{t.ui.plans}</div><div className="page-sub">Choose the plan that fits your farm</div></div>
-    <div className="pay-note"><Ic n="card" sz={18} s="#1d4ed8" sw={2}/><p><strong>{m.pay}:</strong> {t.ui.payNote} {m.pay} {t.ui.payNote2}</p></div>
-    <div className="plans-grid">
-      {t.tiers.map((tr,i)=>(
-        <div key={i} className={`plan-card${i===1?' featured':''}`}>
-          {tr.pt&&<div className="plan-pop">{tr.pt}</div>}
-          <div className="plan-name">{tr.n}</div>
-          <div className="plan-price">{tr.p}<span>{t.ui.pm}</span></div>
-          <div className="plan-features">
-            {tr.f.map((f,j)=><div key={j} className="pf-row"><div className="pf-check"><Ic n="check" sz={10} s="#15803d" sw={2.5}/></div><span className="pf-on">{f}</span></div>)}
-            {tr.lk.map((f,j)=><div key={j} className="pf-row"><div className="pf-x"><Ic n="x" sz={10} s="#9ca3af" sw={2.5}/></div><span className="pf-off">{f}</span></div>)}
-          </div>
-          <button className={`plan-btn ${i===1?'plan-btn-pri':'plan-btn-sec'}`}>{tr.pb}</button>
+// Inside the Android app (Google Play) plans can't be sold with MoMo, so paying is hidden there.
+const IS_ANDROID_APP = (() => {
+  try {
+    if((document.referrer || '').startsWith('android-app://com.agriadvisor.app')) sessionStorage.setItem('agri_twa', '1');
+    return sessionStorage.getItem('agri_twa') === '1';
+  } catch(e) { return false; }
+})();
+const momoLocal = (phone) => {
+  const d = String(phone || '').replace(/\D/g, '');
+  if(/^2507\d{8}$/.test(d)) return '0' + d.slice(3);
+  if(/^7\d{8}$/.test(d)) return '0' + d;
+  return d;
+};
+const momoValid = (v) => /^(?:250|0)?7[89]\d{7}$/.test(String(v || '').replace(/\D/g, '').replace(/^00/, ''));
+const momoPendingKey = (uid) => `agri_momo_pending_${uid || 'guest'}`;
+const momoWait = (ms) => new Promise(r => setTimeout(r, ms));
+const fmtClock = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
+const MoMoPanel = ({pay, phone, setPhone, offline, elapsed, priceLabel, onSend, onCancel, onCheck, onRetry, goTo}) => {
+  const box = {marginTop:20,borderTop:'1px solid #e5e7eb',paddingTop:16,textAlign:'left'};
+  const btn = {width:'100%',background:'#15803d',color:'#fff',border:'none',borderRadius:12,padding:'13px',fontSize:14,fontWeight:700,cursor:'pointer'};
+  const link = {background:'none',border:'none',color:'#6b7280',fontSize:13,textDecoration:'underline',cursor:'pointer',padding:'10px 0 0',width:'100%'};
+  const note = (bg, fg, bd) => ({fontSize:13,lineHeight:1.5,padding:'10px 12px',borderRadius:10,background:bg,color:fg,border:`1px solid ${bd}`,marginBottom:12});
+
+  if(pay.state === 'waiting' || pay.state === 'slow') return (
+    <div style={box}>
+      <div style={{fontSize:30,textAlign:'center'}}>📱</div>
+      <div style={{fontWeight:700,fontSize:16,textAlign:'center',margin:'4px 0 6px'}}>{pay.state === 'slow' ? 'Still waiting for MTN' : 'Check your phone'}</div>
+      <div style={{fontSize:14,color:'#374151',textAlign:'center',lineHeight:1.5,marginBottom:12}}>{pay.message}</div>
+      {pay.state === 'waiting' ? (
+        <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,fontSize:13,color:'#15803d',fontWeight:600,marginBottom:12}}>
+          <span style={{width:14,height:14,border:'2px solid #bbf7d0',borderTopColor:'#15803d',borderRadius:'50%',display:'inline-block',animation:'momoSpin .8s linear infinite'}}/>
+          Waiting for approval · {fmtClock(elapsed)}
         </div>
-      ))}
+      ) : (
+        <div style={note('#fffbeb','#92400e','#fde68a')}>If you approved it, your plan switches on automatically. Tap “Check again” in a moment.</div>
+      )}
+      {offline && <div style={note('#fef2f2','#b91c1c','#fecaca')}>No connection. We'll keep checking when your signal comes back.</div>}
+      {pay.state === 'slow'
+        ? <><button style={btn} onClick={onCheck}>Check again</button><button style={link} onClick={onRetry}>Send a new request</button></>
+        : <div style={{fontSize:12,color:'#6b7280',textAlign:'center',lineHeight:1.5}}>No prompt? Make sure that phone has signal, then <span style={{textDecoration:'underline',cursor:'pointer'}} onClick={onRetry}>send it again</span>.</div>}
+      <button style={link} onClick={onCancel}>Use another number</button>
     </div>
-  </div>
-);
+  );
+
+  if(pay.state === 'paid') return (
+    <div style={box}>
+      <div style={note('#f0fdf4','#15803d','#bbf7d0')}>✅ {pay.message}</div>
+      <button style={btn} onClick={()=>goTo && goTo('scan')}>Scan a crop now</button>
+    </div>
+  );
+
+  if(pay.state === 'review') return (
+    <div style={box}><div style={note('#fffbeb','#92400e','#fde68a')}>⚠️ {pay.message}</div></div>
+  );
+
+  // Phone number form (also shown after a failed payment)
+  const sending = pay.state === 'sending';
+  return (
+    <div style={box}>
+      {(pay.state === 'failed' || pay.state === 'error') && <div style={note('#fef2f2','#b91c1c','#fecaca')}>❌ {pay.message}</div>}
+      <label style={{fontSize:12,fontWeight:600,color:'#374151',display:'block',marginBottom:4}}>MTN MoMo number</label>
+      <input type="tel" inputMode="tel" autoComplete="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="078 123 4567"
+        onKeyDown={e=>{ if(e.key === 'Enter') onSend(); }}
+        style={{width:'100%',padding:'11px 12px',border:'1.5px solid #e5e7eb',borderRadius:10,fontSize:16,outline:'none'}}/>
+      <div style={{fontSize:12,color:'#6b7280',margin:'6px 0 14px',lineHeight:1.5}}>Any MTN number (078 or 079). That phone gets a prompt to approve with the MoMo PIN.</div>
+      <button style={{...btn,opacity:sending?.7:1}} disabled={sending} onClick={onSend}>{sending ? 'Sending…' : `Pay ${priceLabel} with MoMo`}</button>
+      <button style={link} onClick={onCancel}>Cancel</button>
+    </div>
+  );
+};
+
+const PlansPage = ({t,m,ck,profile,uid,goTo}) => {
+  const pi = planInfo(profile);
+  const canPay = ck === 'rwanda' && !IS_ANDROID_APP;
+  const [open, setOpen] = useState(false);
+  const [phone, setPhone] = useState(() => momoLocal(profile && profile.phone));
+  const [pay, setPay] = useState({state:'form'});
+  const [offline, setOffline] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const runRef = React.useRef(0);          // bumping it stops the current checking loop
+
+  const finish = useCallback((d) => {
+    try { localStorage.removeItem(momoPendingKey(uid)); } catch(e) {}
+    const state = d.status === 'SUCCESSFUL' ? 'paid' : d.status === 'REVIEW' ? 'review' : 'failed';
+    setPay({...d, state});
+    if(state === 'paid') window.dispatchEvent(new Event('agri-profile-refresh'));
+  }, [uid]);
+
+  // Ask our server (which asks MTN) until the farmer approves or declines
+  const watch = useCallback(async (reference) => {
+    const run = ++runRef.current;
+    const started = Date.now();
+    setOffline(false); setElapsed(0);
+    try { localStorage.setItem(momoPendingKey(uid), reference); } catch(e) {}
+    while(runRef.current === run){
+      const waited = Date.now() - started;
+      if(waited > 5 * 60 * 1000){ setPay(p => ({...p, state:'slow'})); return; }
+      await momoWait(waited < 2 * 60 * 1000 ? 4000 : 10000);
+      if(runRef.current !== run) return;
+      const d = await api.get(`/api/payments/momo/status/${reference}/`);
+      if(runRef.current !== run) return;
+      if(d._networkError || d.offline){ setOffline(true); continue; }   // offline: the service worker answers {offline:true}
+      setOffline(false);
+      if(d._status === 404 && !d.status){ finish({status:'FAILED', message:'This payment was not found. You have not been charged. Please try again.'}); return; }
+      if(!d.status || d.status === 'PENDING') continue;
+      finish(d);
+      return;
+    }
+  }, [uid, finish]);
+
+  // Clock shown while waiting
+  useEffect(() => {
+    if(pay.state !== 'waiting') return;
+    const start = Date.now() - elapsed * 1000;
+    const id = setInterval(() => setElapsed(Math.round((Date.now() - start) / 1000)), 1000);
+    return () => clearInterval(id);
+  }, [pay.state]);
+
+  // Coming back to this page: carry on with a payment that was still waiting, or show how it ended
+  useEffect(() => {
+    if(!canPay) return;
+    let alive = true;
+    api.get('/api/payments/momo/latest/').then(d => {
+      if(!alive || !d || d._networkError || !d.payment) return;
+      const p = d.payment;
+      let mine = null;
+      try { mine = localStorage.getItem(momoPendingKey(uid)); } catch(e) {}
+      if(p.status === 'PENDING'){ setOpen(true); setPay({...p, state:'waiting'}); watch(p.reference); }
+      else if(mine && mine === p.reference){ setOpen(true); finish(p); }
+      if(d.subscription && d.subscription.is_active && d.subscription.plan !== 'free' && !(profile && profile.is_pro))
+        window.dispatchEvent(new Event('agri-profile-refresh'));
+    });
+    return () => { alive = false; runRef.current++; };
+  }, [canPay, uid]);
+
+  const send = async () => {
+    if(!momoValid(phone)){ setPay({state:'error', message:'Enter an MTN MoMo number that starts with 078 or 079.'}); return; }
+    runRef.current++;
+    setPay({state:'sending'});
+    try {
+      const d = await api.post('/api/payments/momo/pay/', {plan:'farmer_pro', phone}, true);
+      setPay({...d, state:'waiting'});
+      watch(d.reference);
+    } catch(e) {
+      setPay({state:'error', message: e.message || 'Could not send the request. Please try again.'});
+    }
+  };
+  const cancel = () => {
+    runRef.current++;
+    try { localStorage.removeItem(momoPendingKey(uid)); } catch(e) {}
+    setPay({state:'form'});
+    if(pay.state !== 'waiting' && pay.state !== 'slow') setOpen(false);
+  };
+  const checkAgain = () => { setPay(p => ({...p, state:'waiting'})); watch(pay.reference); };
+
+  const disabledBtn = (label) => <button className="plan-btn plan-btn-sec" disabled style={{cursor:'default',opacity:.75}}>{label}</button>;
+  const noteText = canPay
+    ? <><strong>MTN MoMo:</strong> pay from any MTN number. Your plan switches on as soon as you approve with your PIN. No bank card needed.</>
+    : IS_ANDROID_APP
+      ? <>Plans can't be bought inside the Android app.</>
+      : <><strong>{m.pay}:</strong> online payment in your country is coming soon.</>;
+
+  return (
+    <div className="fade-up">
+      <style>{'@keyframes momoSpin{to{transform:rotate(360deg)}}'}</style>
+      <div className="page-header"><div className="page-title">{t.ui.plans}</div><div className="page-sub">Choose the plan that fits your farm</div></div>
+      <div style={{background:pi.unlimited?'#f0fdf4':'#f9fafb',border:`1px solid ${pi.unlimited?'#bbf7d0':'#e5e7eb'}`,borderRadius:12,padding:'12px 16px',fontSize:14,color:'#374151',marginBottom:14,maxWidth:900}}>
+        {pi.unlimited
+          ? <>✅ You're on <strong>{pi.name}</strong>{pi.until && <> until <strong>{pi.until}</strong></>}. Unlimited crop scans.</>
+          : <>You're on the <strong>Free plan</strong>{pi.scansLeft !== null && <> · {pi.scansLeft} of 3 free scans left this month</>}.</>}
+      </div>
+      <div className="pay-note"><Ic n="card" sz={18} s="#1d4ed8" sw={2}/><p>{noteText}</p></div>
+      <div className="plans-grid">
+        {t.tiers.map((tr,i)=>(
+          <div key={i} className={`plan-card${i===1?' featured':''}`}>
+            {tr.pt&&<div className="plan-pop">{tr.pt}</div>}
+            <div className="plan-name">{tr.n}</div>
+            <div className="plan-price">{tr.p}<span>{t.ui.pm}</span></div>
+            <div className="plan-features">
+              {tr.f.map((f,j)=><div key={j} className="pf-row"><div className="pf-check"><Ic n="check" sz={10} s="#15803d" sw={2.5}/></div><span className="pf-on">{f}</span></div>)}
+              {tr.lk.map((f,j)=><div key={j} className="pf-row"><div className="pf-x"><Ic n="x" sz={10} s="#9ca3af" sw={2.5}/></div><span className="pf-off">{f}</span></div>)}
+            </div>
+            {i===0 && disabledBtn(pi.plan === 'free' ? 'Current plan' : 'Free plan')}
+            {i===1 && (pi.plan === 'business' ? disabledBtn('Included in your plan')
+              : !canPay ? disabledBtn(IS_ANDROID_APP ? 'Not available in the app' : 'Coming soon')
+              : open ? <MoMoPanel pay={pay} phone={phone} setPhone={setPhone} offline={offline} elapsed={elapsed} priceLabel={tr.p}
+                  onSend={send} onCancel={cancel} onCheck={checkAgain} onRetry={()=>{ runRef.current++; setPay({state:'form'}); }} goTo={goTo}/>
+              : <button className="plan-btn plan-btn-pri" onClick={()=>{ setOpen(true); setPay({state:'form'}); }}>{pi.plan === 'pro' ? `Add 1 month · ${tr.p}` : tr.pb}</button>)}
+            {i===2 && (pi.plan === 'business' ? disabledBtn('Current plan') : <button className="plan-btn plan-btn-sec">{tr.pb}</button>)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 /* ══ EMAIL LOGIN (settings) ══ */
 const EmailLoginPanel = ({profile}) => {
