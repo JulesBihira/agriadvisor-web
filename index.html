@@ -794,11 +794,63 @@ const PROVINCES = {
   },
 };
 
+// Farm size: the account stores hectares; each farmer sees and types the unit used in their country
+// (acres in Kenya, Uganda and Tanzania; hectares in Rwanda and Ethiopia, with square metres for small Rwandan plots).
+const HA_PER_ACRE = 0.404686;
+const FARM_UNIT = {kenya:'acre', uganda:'acre', tanzania:'acre', rwanda:'ha', ethiopia:'ha'};
+const UNIT_LONG = {acre:'acres', ha:'hectares (ha)', m2:'m²'};
+const farmUnit = (ck) => FARM_UNIT[ck] || 'ha';
+const toHa = (n, unit) => unit === 'acre' ? n * HA_PER_ACRE : unit === 'm2' ? n / 10000 : n;
+// 2 decimals, as the account keeps it; a real farm is never rounded down to nothing
+const roundHa = (ha) => (ha > 0 ? Math.max(0.01, Math.round(ha * 100) / 100) : null);
+// hectares -> the farmer's unit. Acres go to the nearest 0.05, so the number a farmer typed comes back the same.
+const haToLocal = (v, ck) => {
+  const n = parseFloat(v);
+  if(isNaN(n) || n <= 0) return null;
+  if(farmUnit(ck) !== 'acre') return Number(n.toFixed(2));
+  const a = n / HA_PER_ACRE;
+  return a < 0.1 ? Number(a.toFixed(2)) : Math.round(a * 20) / 20;
+};
+const fmtFarmSize = (v, ck) => {
+  const n = haToLocal(v, ck);
+  if(n === null) return '';
+  return farmUnit(ck) === 'acre' ? `${n} ${n === 1 ? 'acre' : 'acres'}` : `${n} ha`;
+};
+// Size choices at sign-up, in each country's unit. val is in that unit (stored as hectares).
+const ACRE_TILES = [
+  {val:'0.5', label:'< 1 acre',    sub:'Small plot'},
+  {val:'1.5', label:'1–2 acres',   sub:''},
+  {val:'3',   label:'2–5 acres',   sub:''},
+  {val:'7',   label:'5–10 acres',  sub:''},
+  {val:'15',  label:'10–20 acres', sub:''},
+  {val:'25',  label:'20+ acres',   sub:'Large farm'},
+];
+const FARM_SIZE_TILES = {
+  kenya: ACRE_TILES, uganda: ACRE_TILES, tanzania: ACRE_TILES,
+  rwanda: [
+    {val:'0.15', label:'< 0.25 ha',    sub:'under 2,500 m²'},
+    {val:'0.35', label:'0.25–0.5 ha',  sub:'2,500–5,000 m²'},
+    {val:'0.75', label:'0.5–1 ha',     sub:''},
+    {val:'1.5',  label:'1–2 ha',       sub:''},
+    {val:'3',    label:'2–5 ha',       sub:''},
+    {val:'7',    label:'5+ ha',        sub:'Large farm'},
+  ],
+  ethiopia: [
+    {val:'0.25', label:'< 0.5 ha',  sub:'Small plot'},
+    {val:'0.75', label:'0.5–1 ha',  sub:''},
+    {val:'1.5',  label:'1–2 ha',    sub:''},
+    {val:'3',    label:'2–5 ha',    sub:''},
+    {val:'7',    label:'5–10 ha',   sub:''},
+    {val:'15',   label:'10+ ha',    sub:'Large farm'},
+  ],
+};
+
 const FarmProfileStep = ({country, onComplete, onBack, loading}) => {
   const {useState} = React;
   const [farmSize, setFarmSize] = useState('');
   const [customSize, setCustomSize] = useState('');
   const [showCustomSize, setShowCustomSize] = useState(false);
+  const [customUnit, setCustomUnit] = useState(farmUnit(country || 'kenya'));
   const [province, setProvince] = useState('');
   const [district, setDistrict] = useState('');
   const [selectedCrops, setSelectedCrops] = useState([]);
@@ -820,16 +872,22 @@ const FarmProfileStep = ({country, onComplete, onBack, loading}) => {
     );
   };
 
+  // Farm size in the unit farmers use here (stored as hectares)
+  const unit = farmUnit(countryKey);
+  const sizeTiles = FARM_SIZE_TILES[countryKey] || FARM_SIZE_TILES.ethiopia;
+  const customUnits = unit === 'acre' ? ['acre','ha'] : countryKey === 'rwanda' ? ['ha','m2'] : ['ha'];
+  const unitHint = unit === 'acre' ? '1 acre ≈ 0.4 ha · 1 ha ≈ 2.5 acres' : countryKey === 'rwanda' ? '1 ha = 10,000 m²' : '';
+
   const getFinalSize = () => {
-    if(showCustomSize && customSize) return parseFloat(customSize);
-    if(farmSize) return parseFloat(farmSize);
+    if(showCustomSize && customSize) return roundHa(toHa(parseFloat(customSize), customUnit));
+    if(farmSize) return roundHa(toHa(parseFloat(farmSize), unit));
     return null;
   };
 
   const getSizeLabel = () => {
-    if(showCustomSize && customSize) return customSize + ' ha';
-    const labels = {'0.25':'< 0.5 ha','0.75':'0.5–1 ha','1.5':'1–2 ha','3':'2–5 ha','7':'5–10 ha','15':'10+ ha'};
-    return labels[farmSize] || '';
+    if(showCustomSize && customSize) return customSize + ' ' + (customUnit === 'ha' ? 'ha' : UNIT_LONG[customUnit]);
+    const tile = sizeTiles.find(x => x.val === farmSize);
+    return tile ? tile.label : '';
   };
 
   const handleSubmit = () => {
@@ -872,14 +930,7 @@ const FarmProfileStep = ({country, onComplete, onBack, loading}) => {
         {/* ── FARM SIZE ── */}
         <div className="fp-section-title">🌾 How big is your farm?</div>
         <div className="fp-size-grid">
-          {[
-            {val:'0.25',label:'< 0.5 ha',sub:'Small plot'},
-            {val:'0.75',label:'0.5–1 ha',sub:''},
-            {val:'1.5', label:'1–2 ha',sub:''},
-            {val:'3',   label:'2–5 ha',sub:''},
-            {val:'7',   label:'5–10 ha',sub:''},
-            {val:'15',  label:'10+ ha',sub:'Large farm'},
-          ].map(({val,label,sub})=>(
+          {sizeTiles.map(({val,label,sub})=>(
             <div key={val} className={`fp-size-tile${farmSize===val&&!showCustomSize?' sel':''}`}
               onClick={()=>{setFarmSize(val);setShowCustomSize(false);}}>
               <div className="fp-size-val">{label}</div>
@@ -892,12 +943,20 @@ const FarmProfileStep = ({country, onComplete, onBack, loading}) => {
             <div className="fp-size-lbl">Custom size</div>
           </div>
         </div>
+        {unitHint && <div style={{fontSize:11,color:'var(--muted)',marginTop:6}}>{unitHint}</div>}
         {showCustomSize && (
           <div style={{marginTop:8,display:'flex',gap:8,alignItems:'center'}}>
-            <input className="fp-input" type="number" placeholder="e.g. 0.3" min="0.01" step="0.01"
+            <input className="fp-input" type="number" inputMode="decimal" min="0" step="any"
+              placeholder={customUnit==='m2'?'e.g. 1500':customUnit==='acre'?'e.g. 1.5':'e.g. 0.3'}
               value={customSize} onChange={e=>setCustomSize(e.target.value)}
               style={{flex:1}} autoFocus/>
-            <span style={{fontSize:13,color:'var(--muted)',whiteSpace:'nowrap'}}>hectares (ha)</span>
+            {customUnits.length > 1 ? (
+              <select className="fp-input" style={{width:'auto',flex:'0 0 auto'}} value={customUnit} onChange={e=>setCustomUnit(e.target.value)}>
+                {customUnits.map(u => <option key={u} value={u}>{UNIT_LONG[u]}</option>)}
+              </select>
+            ) : (
+              <span style={{fontSize:13,color:'var(--muted)',whiteSpace:'nowrap'}}>{UNIT_LONG[customUnit]}</span>
+            )}
           </div>
         )}
 
@@ -1126,10 +1185,6 @@ const api = {
 };
 
 // ── Small helpers used across pages ──
-const fmtFarmSize = (v) => {
-  const n = parseFloat(v);
-  return isNaN(n) || n <= 0 ? '' : `${Number(n.toFixed(2))} ha`;
-};
 const timeAgo = (iso) => {
   if(!iso) return '';
   const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
@@ -2841,7 +2896,7 @@ const SettingsPage = ({t,m,ck,lang,setLang,profile,realName,realDistrict,realCro
   const blankForm = () => ({
     full_name: realName || '',
     district: realDistrict || '',
-    farm_size: p.farm_size ? String(Number(parseFloat(p.farm_size).toFixed(2))) : '',
+    farm_size: haToLocal(p.farm_size, ck) === null ? '' : String(haToLocal(p.farm_size, ck)),
     crops: [...(realCrops || [])],
     other: '',
   });
@@ -2855,7 +2910,11 @@ const SettingsPage = ({t,m,ck,lang,setLang,profile,realName,realDistrict,realCro
 
   const handleSaveProfile = async () => {
     setSaving(true); setSaveMsg('');
-    const size = parseFloat(form.farm_size);
+    // the form is in acres or hectares (the farmer's unit); the account stores hectares.
+    // Unchanged size: keep the stored value exactly.
+    const sizeIn = parseFloat(form.farm_size);
+    const size = (form.farm_size === blankForm().farm_size && parseFloat(p.farm_size) > 0) ? parseFloat(p.farm_size)
+      : (isNaN(sizeIn) || sizeIn <= 0 ? NaN : roundHa(toHa(sizeIn, farmUnit(ck))));
     const crops = [...form.crops, ...(form.other.trim() ? [form.other.trim()] : [])];
     try {
       await api.put('/api/auth/profile/', {
@@ -2923,8 +2982,8 @@ const SettingsPage = ({t,m,ck,lang,setLang,profile,realName,realDistrict,realCro
                       <datalist id="agri-districts">{districtChoices.map(d=><option key={d} value={d}/>)}</datalist>
                     </div>
                     <div>
-                      <label style={labelStyle}>Farm size (hectares)</label>
-                      <input style={inputStyle} type="number" min="0" step="0.1" inputMode="decimal" value={form.farm_size} onChange={e=>setForm({...form,farm_size:e.target.value})} placeholder="e.g. 0.5"/>
+                      <label style={labelStyle}>Farm size ({farmUnit(ck)==='acre'?'acres':'hectares'})</label>
+                      <input style={inputStyle} type="number" min="0" step="any" inputMode="decimal" value={form.farm_size} onChange={e=>setForm({...form,farm_size:e.target.value})} placeholder={farmUnit(ck)==='acre'?'e.g. 1.5':'e.g. 0.5'}/>
                     </div>
                     <div>
                       <label style={labelStyle}>Crops you grow</label>
@@ -2950,7 +3009,7 @@ const SettingsPage = ({t,m,ck,lang,setLang,profile,realName,realDistrict,realCro
                     ['Email', profile && profile.email ? profile.email + (profile.email_verified ? ' ✓ confirmed' : ' (not confirmed)') : 'Not set'],
                     ['Country', ck.charAt(0).toUpperCase()+ck.slice(1)],
                     ['District', realDistrict || 'Not set'],
-                    ['Farm size', fmtFarmSize(p.farm_size) || 'Not set'],
+                    ['Farm size', fmtFarmSize(p.farm_size, ck) || 'Not set'],
                     ['Crops', (realCrops && realCrops.length) ? realCrops.join(', ') : 'None yet'],
                     ['Plan', pi.until ? `${pi.name} · until ${pi.until}` : pi.name],
                   ].map(([l,v])=>(
@@ -3078,7 +3137,7 @@ const WebApp = ({countryKey, langKey, onLogout, userProfile}) => {
   const realCrops = (profile && profile.profile && profile.profile.main_crops) || [];
   const countryName = countryKey.charAt(0).toUpperCase()+countryKey.slice(1);
   const realRegion = realDistrict ? `${realDistrict}, ${countryName}` : countryName;
-  const realFarm = [fmtFarmSize(realFarmSize), realCrops.slice(0,2).join(' & ')].filter(Boolean).join(' · ');
+  const realFarm = [fmtFarmSize(realFarmSize, countryKey), realCrops.slice(0,2).join(' & ')].filter(Boolean).join(' · ');
   const initials = realName ? realName.split(' ').filter(Boolean).map(n=>n[0]).join('').toUpperCase().slice(0,2) : '👤';
   const pi = planInfo(profile);
 
