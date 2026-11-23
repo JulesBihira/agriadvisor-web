@@ -827,47 +827,89 @@ const CROP_OPTIONS = {
 };
 
 /* Province → District hierarchy for accurate location */
+// Regions and districts of each country (complete lists; the server checks against the same lists)
 const PROVINCES = {
   kenya: {
-    'Central': ['Kiambu','Nyeri','Kirinyaga','Muranga','Nyandarua'],
-    'Rift Valley': ['Nakuru','Uasin Gishu','Trans Nzoia','Kericho','Bomet','Nandi','Baringo','Laikipia'],
-    'Western': ['Kakamega','Bungoma','Busia','Vihiga'],
-    'Nyanza': ['Kisumu','Siaya','Homabay','Migori','Kisii','Nyamira'],
-    'Eastern': ['Meru','Embu','Kitui','Machakos','Makueni','Isiolo','Marsabit'],
-    'Coast': ['Mombasa','Kilifi','Kwale','Taita Taveta','Lamu','Tana River'],
-    'Nairobi': ['Nairobi Central','Westlands','Kasarani','Embakasi','Dagoretti'],
-    'North Eastern': ['Garissa','Wajir','Mandera'],
+    "Central": ["Kiambu", "Kirinyaga", "Murang'a", "Nyandarua", "Nyeri"],
+    "Coast": ["Kilifi", "Kwale", "Lamu", "Mombasa", "Taita-Taveta", "Tana River"],
+    "Eastern": ["Embu", "Isiolo", "Kitui", "Machakos", "Makueni", "Marsabit", "Meru", "Tharaka-Nithi"],
+    "Nairobi": ["Nairobi"],
+    "North Eastern": ["Garissa", "Mandera", "Wajir"],
+    "Nyanza": ["Homa Bay", "Kisii", "Kisumu", "Migori", "Nyamira", "Siaya"],
+    "Rift Valley": ["Baringo", "Bomet", "Elgeyo-Marakwet", "Kajiado", "Kericho", "Laikipia", "Nakuru", "Nandi", "Narok", "Samburu", "Trans Nzoia", "Turkana", "Uasin Gishu", "West Pokot"],
+    "Western": ["Bungoma", "Busia", "Kakamega", "Vihiga"],
   },
   uganda: {
-    'Central': ['Kampala','Wakiso','Mukono','Buikwe','Kayunga','Luwero','Nakaseke'],
-    'Eastern': ['Jinja','Iganga','Bugiri','Mayuge','Tororo','Mbale','Sironko','Kapchorwa'],
-    'Northern': ['Gulu','Lira','Kitgum','Pader','Amuru','Nwoya','Omoro'],
-    'Western': ['Mbarara','Bushenyi','Ntungamo','Isingiro','Rukungiri','Fort Portal','Kasese','Bundibugyo'],
+    "Central": ["Buikwe", "Bukomansimbi", "Butambala", "Buvuma", "Gomba", "Kalangala", "Kalungu", "Kampala", "Kassanda", "Kayunga", "Kiboga", "Kyankwanzi", "Kyotera", "Luweero", "Lwengo", "Lyantonde", "Masaka", "Mityana", "Mpigi", "Mubende", "Mukono", "Nakaseke", "Nakasongola", "Rakai", "Ssembabule", "Wakiso"],
+    "Eastern": ["Amuria", "Budaka", "Bududa", "Bugiri", "Bugweri", "Bukedea", "Bukwo", "Bulambuli", "Busia", "Butaleja", "Butebo", "Buyende", "Iganga", "Jinja", "Kaberamaido", "Kalaki", "Kaliro", "Kamuli", "Kapchorwa", "Kapelebyong", "Katakwi", "Kibuku", "Kumi", "Kween", "Luuka", "Manafwa", "Mayuge", "Mbale", "Namayingo", "Namisindwa", "Namutumba", "Ngora", "Pallisa", "Serere", "Sironko", "Soroti", "Tororo"],
+    "Northern": ["Abim", "Adjumani", "Agago", "Alebtong", "Amolatar", "Amudat", "Amuru", "Apac", "Arua", "Dokolo", "Gulu", "Kaabong", "Karenga", "Kitgum", "Koboko", "Kole", "Kotido", "Kwania", "Lamwo", "Lira", "Madi-Okollo", "Maracha", "Moroto", "Moyo", "Nabilatuk", "Nakapiripirit", "Napak", "Nebbi", "Nwoya", "Obongi", "Omoro", "Otuke", "Oyam", "Pader", "Pakwach", "Terego", "Yumbe", "Zombo"],
+    "Western": ["Buhweju", "Buliisa", "Bundibugyo", "Bunyangabu", "Bushenyi", "Hoima", "Ibanda", "Isingiro", "Kabale", "Kabarole", "Kagadi", "Kakumiro", "Kamwenge", "Kanungu", "Kasese", "Kazo", "Kibaale", "Kikuube", "Kiruhura", "Kiryandongo", "Kisoro", "Kitagwenda", "Kyegegwa", "Kyenjojo", "Masindi", "Mbarara", "Mitooma", "Ntoroko", "Ntungamo", "Rubanda", "Rubirizi", "Rukiga", "Rukungiri", "Rwampara", "Sheema"],
   },
   tanzania: {
-    'Arusha': ['Arusha City','Arumeru','Monduli','Ngorongoro','Longido','Meru'],
-    'Dar es Salaam': ['Kinondoni','Ilala','Temeke','Ubungo','Kigamboni'],
-    'Kilimanjaro': ['Moshi Urban','Moshi Rural','Hai','Siha','Rombo','Same','Mwanga'],
-    'Morogoro': ['Morogoro Urban','Morogoro Rural','Kilosa','Mvomero','Gairo','Ulanga'],
-    'Mbeya': ['Mbeya City','Rungwe','Kyela','Mbarali','Chunya','Momba'],
-    'Mwanza': ['Ilemela','Nyamagana','Magu','Kwimba','Misungwi','Geita'],
-    'Other Regions': ['Dodoma','Tanga','Iringa','Kigoma','Tabora','Lindi','Mtwara','Shinyanga','Singida','Rukwa'],
+    "Arusha": ["Arusha City", "Arusha Rural", "Karatu", "Longido", "Meru", "Monduli", "Ngorongoro"],
+    "Dar es Salaam": ["Ilala", "Kigamboni", "Kinondoni", "Temeke", "Ubungo"],
+    "Dodoma": ["Bahi", "Chamwino", "Chemba", "Dodoma City", "Kondoa Rural", "Kondoa Town", "Kongwa", "Mpwapwa"],
+    "Geita": ["Bukombe", "Chato", "Geita Rural", "Geita Town", "Mbogwe", "Nyang'hwale"],
+    "Iringa": ["Iringa Municipal", "Iringa Rural", "Kilolo", "Mafinga Town", "Mufindi"],
+    "Kagera": ["Biharamulo", "Bukoba Municipal", "Bukoba Rural", "Karagwe", "Kyerwa", "Missenyi", "Muleba", "Ngara"],
+    "Katavi": ["Mlele", "Mpanda Municipal", "Mpimbwe", "Nsimbo", "Tanganyika"],
+    "Kigoma": ["Buhigwe", "Kakonko", "Kasulu Rural", "Kasulu Town", "Kibondo", "Kigoma Municipal", "Kigoma Rural", "Uvinza"],
+    "Kilimanjaro": ["Hai", "Moshi Municipal", "Moshi Rural", "Mwanga", "Rombo", "Same", "Siha"],
+    "Lindi": ["Kilwa", "Lindi Municipal", "Liwale", "Mtama", "Nachingwea", "Ruangwa"],
+    "Manyara": ["Babati Rural", "Babati Town", "Hanang", "Kiteto", "Mbulu Rural", "Mbulu Town", "Simanjiro"],
+    "Mara": ["Bunda Rural", "Bunda Town", "Butiama", "Musoma Municipal", "Musoma Rural", "Rorya", "Serengeti", "Tarime Rural", "Tarime Town"],
+    "Mbeya": ["Busekelo", "Chunya", "Kyela", "Mbarali", "Mbeya City", "Mbeya Rural", "Rungwe"],
+    "Mjini Magharibi": ["Magharibi A", "Magharibi B", "Mjini"],
+    "Morogoro": ["Gairo", "Ifakara Town", "Kilosa", "Malinyi", "Mlimba", "Morogoro Municipal", "Morogoro Rural", "Mvomero", "Ulanga"],
+    "Mtwara": ["Masasi Rural", "Masasi Town", "Mtwara Municipal", "Mtwara Rural", "Nanyamba Town", "Nanyumbu", "Newala Rural", "Newala Town", "Tandahimba"],
+    "Mwanza": ["Buchosa", "Ilemela", "Kwimba", "Magu", "Misungwi", "Nyamagana", "Sengerema", "Ukerewe"],
+    "Njombe": ["Ludewa", "Makambako Town", "Makete", "Njombe Rural", "Njombe Town", "Wanging'ombe"],
+    "Pemba North": ["Micheweni", "Wete"],
+    "Pemba South": ["Chake Chake", "Mkoani"],
+    "Pwani": ["Bagamoyo", "Chalinze", "Kibaha", "Kibaha Town", "Kibiti", "Kisarawe", "Mafia", "Mkuranga", "Rufiji"],
+    "Rukwa": ["Kalambo", "Nkasi", "Sumbawanga Municipal", "Sumbawanga Rural"],
+    "Ruvuma": ["Madaba", "Mbinga Rural", "Mbinga Town", "Namtumbo", "Nyasa", "Songea Municipal", "Songea Rural", "Tunduru"],
+    "Shinyanga": ["Kahama Municipal", "Kishapu", "Msalala", "Shinyanga Municipal", "Shinyanga Rural", "Ushetu"],
+    "Simiyu": ["Bariadi Rural", "Bariadi Town", "Busega", "Itilima", "Maswa", "Meatu"],
+    "Singida": ["Ikungi", "Iramba", "Itigi", "Manyoni", "Mkalama", "Singida Municipal", "Singida Rural"],
+    "Songwe": ["Ileje", "Mbozi", "Momba", "Songwe", "Tunduma Town"],
+    "Tabora": ["Igunga", "Kaliua", "Nzega Rural", "Nzega Town", "Sikonge", "Tabora Municipal", "Urambo", "Uyui"],
+    "Tanga": ["Bumbuli", "Handeni Rural", "Handeni Town", "Kilindi", "Korogwe Rural", "Korogwe Town", "Lushoto", "Mkinga", "Muheza", "Pangani", "Tanga City"],
+    "Unguja North": ["Kaskazini A", "Kaskazini B"],
+    "Unguja South": ["Kati", "Kusini"],
   },
   rwanda: {
-    'Northern Province': ['Musanze','Burera','Gakenke','Gicumbi','Rulindo'],
-    'Southern Province': ['Huye','Gisagara','Kamonyi','Muhanga','Nyamagabe','Nyanza','Nyaruguru','Ruhango'],
-    'Eastern Province': ['Bugesera','Gatsibo','Kayonza','Kirehe','Ngoma','Nyagatare','Rwamagana'],
-    'Western Province': ['Karongi','Ngororero','Nyabihu','Nyamasheke','Rubavu','Rusizi','Rutsiro'],
-    'Kigali City': ['Gasabo','Kicukiro','Nyarugenge'],
+    "Northern Province": ["Musanze", "Burera", "Gakenke", "Gicumbi", "Rulindo"],
+    "Southern Province": ["Huye", "Gisagara", "Kamonyi", "Muhanga", "Nyamagabe", "Nyanza", "Nyaruguru", "Ruhango"],
+    "Eastern Province": ["Bugesera", "Gatsibo", "Kayonza", "Kirehe", "Ngoma", "Nyagatare", "Rwamagana"],
+    "Western Province": ["Karongi", "Ngororero", "Nyabihu", "Nyamasheke", "Rubavu", "Rusizi", "Rutsiro"],
+    "Kigali City": ["Gasabo", "Kicukiro", "Nyarugenge"],
   },
   ethiopia: {
-    'Oromia': ['Addis Ababa','Jimma','Dire Dawa','Arsi','Bale','West Shewa','East Shewa','West Hararghe','East Hararghe'],
-    'Amhara': ['Bahir Dar','Gondar','Dessie','Debre Markos','Woldia','Debre Birhan'],
-    'SNNPR': ['Hawassa','Wolaita Sodo','Arbaminch','Hosaena','Alaba','Butajira'],
-    'Tigray': ['Mekelle','Adwa','Axum','Shire','Adigrat','Wukro'],
-    'Other Regions': ['Sidama','Dire Dawa','Harari','Afar','Somali','Benishangul-Gumuz','Gambella'],
+    "Addis Ababa": ["Addis Ketema", "Akaky Kaliti", "Arada", "Bole", "Gullele", "Kirkos", "Kolfe Keranio", "Lemi Kura", "Lideta", "Nifas Silk-Lafto", "Yeka"],
+    "Afar": ["Awsi Rasu", "Fanti Rasu", "Gabi Rasu", "Hari Rasu", "Kilbet Rasu", "Mahi Rasu", "Argobba Special Woreda"],
+    "Amhara": ["Agew Awi", "Bahir Dar", "Central Gondar", "East Gojjam", "North Gondar", "North Shewa (Amhara)", "North Wollo", "Oromo Special Zone", "South Gondar", "South Wollo", "Wag Hemra", "West Gojjam", "West Gondar"],
+    "Benishangul-Gumuz": ["Assosa", "Kamashi", "Metekel", "Mao-Komo Special Woreda", "Pawe Special Woreda"],
+    "Central Ethiopia": ["East Gurage", "Gurage", "Hadiya", "Halaba", "Kembata", "Silte", "Yem", "Kebena Special Woreda", "Mareko Special Woreda", "Tembaro Special Woreda"],
+    "Dire Dawa": ["Dire Dawa"],
+    "Gambela": ["Anuak", "Majang", "Nuer", "Itang Special Woreda"],
+    "Harari": ["Harar"],
+    "Oromia": ["Arsi", "Bale", "Borena", "Buno Bedele", "East Borana", "East Hararghe", "East Shewa", "East Welega", "Finfinne Special Zone", "Guji", "Horo Guduru Welega", "Illu Aba Bora", "Jimma", "Kelam Welega", "North Shewa (Oromia)", "Southwest Shewa", "West Arsi", "West Guji", "West Hararghe", "West Shewa", "West Welega"],
+    "Sidama": ["Central Sidama", "Eastern Sidama", "Northern Sidama", "Southern Sidama", "Hawassa City"],
+    "Somali": ["Afder", "Dawa", "Dollo", "Erer", "Fafan", "Jarar", "Korahe", "Liben", "Nogob", "Shabelle", "Sitti"],
+    "South Ethiopia": ["Ale", "Ari", "Basketo", "Burji", "Gamo", "Gardula", "Gedeo", "Gofa", "Konso", "Koore", "South Omo", "Wolayita"],
+    "South West Ethiopia": ["Bench Sheko", "Dawro", "Keffa", "Konta", "Sheka", "West Omo"],
+    "Tigray": ["Central Tigray", "East Tigray", "Mekelle", "North West Tigray", "South East Tigray", "South Tigray", "West Tigray"],
   },
 };
+// Names saved before the lists were completed (or other spellings) -> the name in the list
+const DISTRICT_ALIASES = {"kenya": {"Muranga": "Murang'a", "Homabay": "Homa Bay", "Taita Taveta": "Taita-Taveta", "Tharaka Nithi": "Tharaka-Nithi", "Elgeyo Marakwet": "Elgeyo-Marakwet", "Nairobi Central": "Nairobi", "Westlands": "Nairobi", "Kasarani": "Nairobi", "Embakasi": "Nairobi", "Dagoretti": "Nairobi"}, "uganda": {"Luwero": "Luweero", "Kasanda": "Kassanda", "Sembabule": "Ssembabule", "Fort Portal": "Kabarole"}, "tanzania": {"Arumeru": "Arusha Rural", "Moshi Urban": "Moshi Municipal", "Morogoro Urban": "Morogoro Municipal", "Geita": "Geita Town", "Dodoma": "Dodoma City", "Tanga": "Tanga City", "Iringa": "Iringa Municipal", "Kigoma": "Kigoma Municipal", "Tabora": "Tabora Municipal", "Lindi": "Lindi Municipal", "Mtwara": "Mtwara Municipal", "Shinyanga": "Shinyanga Municipal", "Singida": "Singida Municipal"}, "rwanda": {}, "ethiopia": {"Hawassa": "Hawassa City", "Wolaita Sodo": "Wolayita", "Arbaminch": "Gamo", "Hosaena": "Hadiya", "Alaba": "Halaba", "Butajira": "East Gurage", "Gondar": "Central Gondar", "Dessie": "South Wollo", "Debre Markos": "East Gojjam", "Woldia": "North Wollo", "Debre Birhan": "North Shewa (Amhara)", "Adwa": "Central Tigray", "Axum": "Central Tigray", "Shire": "North West Tigray", "Adigrat": "East Tigray", "Wukro": "East Tigray", "Harari": "Harar", "Sidama": "Hawassa City", "Gambella": "Anuak"}};
+const listDistrict = (d, ck) => {
+  if(!d) return '';
+  if(Object.values(PROVINCES[ck] || {}).some(ds => ds.includes(d))) return d;
+  return (DISTRICT_ALIASES[ck] || {})[d] || d;
+};
+
 
 // Farm size: the account stores hectares; each farmer sees and types the unit used in their country
 // (acres in Kenya, Uganda and Tanzania; hectares in Rwanda and Ethiopia, with square metres for small Rwandan plots).
@@ -928,6 +970,7 @@ const FarmProfileStep = ({country, onComplete, onBack, loading}) => {
   const [customUnit, setCustomUnit] = useState(farmUnit(country || 'kenya'));
   const [province, setProvince] = useState('');
   const [district, setDistrict] = useState('');
+  const [districtFilter, setDistrictFilter] = useState('');
   const [selectedCrops, setSelectedCrops] = useState([]);
   const [otherCrop, setOtherCrop] = useState('');
   const [irrigated, setIrrigated] = useState('');
@@ -939,7 +982,9 @@ const FarmProfileStep = ({country, onComplete, onBack, loading}) => {
   const crops = CROP_OPTIONS[countryKey] || CROP_OPTIONS.kenya;
   const provinces = PROVINCES[countryKey] || {};
   const provinceList = Object.keys(provinces);
-  const districtList = province ? (provinces[province] || []) : [];
+  const allDistricts = province ? (provinces[province] || []) : [];
+  const districtQuery = districtFilter.trim().toLowerCase();
+  const districtList = districtQuery ? allDistricts.filter(d => d.toLowerCase().includes(districtQuery)) : allDistricts;
 
   const toggleCrop = (crop) => {
     setSelectedCrops(prev =>
@@ -1044,7 +1089,7 @@ const FarmProfileStep = ({country, onComplete, onBack, loading}) => {
           <label style={{fontSize:12,fontWeight:600,color:'var(--ink)',display:'block',marginBottom:6}}>Province / Region</label>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
             {provinceList.map(p=>(
-              <div key={p} onClick={()=>{setProvince(p);setDistrict('');}}
+              <div key={p} onClick={()=>{setProvince(p);setDistrict('');setDistrictFilter('');}}
                 style={{border:`1.5px solid ${province===p?'var(--green)':'#e5e7eb'}`,borderRadius:10,padding:'10px 12px',cursor:'pointer',fontSize:12,fontWeight:province===p?700:400,color:province===p?'var(--green-dark)':'var(--ink)',background:province===p?'#f0fdf4':'#fff',transition:'all .18s',textAlign:'center'}}>
                 {p}
               </div>
@@ -1058,6 +1103,13 @@ const FarmProfileStep = ({country, onComplete, onBack, loading}) => {
             <label style={{fontSize:12,fontWeight:600,color:'var(--ink)',display:'block',marginBottom:6}}>
               District in {province}
             </label>
+            {allDistricts.length > 12 && (
+              <input className="fp-input" style={{marginBottom:8}} type="search" placeholder="Type to find your district"
+                value={districtFilter} onChange={e=>setDistrictFilter(e.target.value)}/>
+            )}
+            {districtQuery && districtList.length === 0 && (
+              <div style={{fontSize:12,color:'var(--muted)',marginBottom:6}}>No district in {province} matches "{districtFilter}".</div>
+            )}
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
               {districtList.map(d=>(
                 <div key={d} onClick={()=>setDistrict(d)}
@@ -1163,6 +1215,7 @@ const API_BASE = 'https://agriadvisor-production.up.railway.app';
 const Auth = {
   saveTokens(access, refresh) {
     try {
+      window._agriTabUid = tokenUid(access);
       localStorage.setItem('agri_access', access);
       if(refresh) localStorage.setItem('agri_refresh', refresh);
     } catch(e) {}
@@ -1171,6 +1224,7 @@ const Auth = {
   getRefresh() { try { return localStorage.getItem('agri_refresh'); } catch(e) { return null; } },
   clear() {
     try { ['agri_access','agri_refresh','agri_profile','agri_pending_profile'].forEach(k => localStorage.removeItem(k)); } catch(e) {}
+    window._agriTabUid = null;
   },
   // Returns true (renewed), false (refresh token rejected: must log in again) or null (no network).
   _pending: null,
@@ -1192,11 +1246,37 @@ const Auth = {
 };
 
 // fetch() that adds the login token and renews it automatically when it has expired
+// Which account a sign-in token belongs to (the server puts user_id in it)
+const tokenUid = (tk) => {
+  try {
+    const part = String(tk || '').split('.')[1];
+    if(!part) return null;
+    const b64 = part.replace(/-/g, '+').replace(/_/g, '/');
+    const json = JSON.parse(atob(b64 + '='.repeat((4 - b64.length % 4) % 4)));
+    return json.user_id != null ? String(json.user_id) : null;
+  } catch(e) { return null; }
+};
+// All tabs of a browser share one sign-in. If another tab signs in to a different account
+// (or signs out), this tab reloads, so it never shows one farmer's details while saving to another's account.
+window.addEventListener('storage', (e) => {
+  if(e.key !== 'agri_access' && e.key !== null) return;
+  const shown = window._agriShownUid ? String(window._agriShownUid) : null;
+  const now = tokenUid(Auth.getToken());
+  if(shown ? now !== shown : !!now) window.location.reload();
+});
+
 const authFetch = async (path, opts = {}, useAuth = true) => {
   const url = path.startsWith('http') ? path : `${API_BASE}${path}`;
   const run = () => {
     const headers = {...(opts.headers || {})};
     const tk = useAuth ? Auth.getToken() : null;
+    // This tab shows another account than the one signed in now: read or save nothing, show the right account
+    const shown = window._agriShownUid ? String(window._agriShownUid) : null;
+    const now = tk ? tokenUid(tk) : null;
+    if(shown && now && shown !== now){
+      try { const c = JSON.parse(localStorage.getItem('agri_profile') || 'null'); if(c && String(c.id) !== now) localStorage.removeItem('agri_profile'); } catch(e) {}
+      window.location.reload(); return new Promise(() => {});
+    }
     if(tk) headers['Authorization'] = `Bearer ${tk}`;
     return fetch(url, {...opts, headers});
   };
@@ -1385,7 +1465,18 @@ const Login = ({onLogin}) => {
     return dial+' '+p.slice(0,2)+'••••'+p.slice(-2);
   };
 
+  // One account at a time on this device: if another tab or window is signed in, it must be closed first
+  const anotherAccountOpen = () => {
+    const cur = tokenUid(Auth.getToken());
+    if(cur && cur !== (window._agriTabUid || null)){
+      setError('Another AgriAdvisor account is open on this device (in another tab or window). Close it first: open it and tap Settings \u2192 Log out. Then sign in here.');
+      return true;
+    }
+    return false;
+  };
+
   const handleSendOtp = async () => {
+    if(anotherAccountOpen()) return;
     if(!form.phone || form.phone.length < 6){ setError('Enter a valid phone number'); return; }
     setLoading(true); setError('');
     const fullPhone = dial + form.phone;
@@ -1435,6 +1526,7 @@ const Login = ({onLogin}) => {
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();
+    if(anotherAccountOpen()) return;
     if(!form.email||!form.password){setError('Please fill in all fields');return;}
     setLoading(true); setError('');
     try {
@@ -1805,6 +1897,7 @@ const Login = ({onLogin}) => {
                 const profileData = {
                   ...(form.name ? {full_name: form.name} : {}),
                   language: lang || (window._agriUserData && window._agriUserData.language) || 'en',
+                  country: ({kenya:'KE',uganda:'UG',tanzania:'TZ',rwanda:'RW',ethiopia:'ET'})[country] || undefined,
                   profile: {
                     farm_size: farmData.farm_size,
                     district: farmData.district,
@@ -2988,7 +3081,7 @@ const SettingsPage = ({t,m,ck,lang,setLang,profile,realName,realDistrict,realCro
   const p = (profile && profile.profile) || {};
   const blankForm = () => ({
     full_name: realName || '',
-    district: realDistrict || '',
+    district: listDistrict(realDistrict, ck),
     farm_size: haToLocal(p.farm_size, ck) === null ? '' : String(haToLocal(p.farm_size, ck)),
     crops: [...(realCrops || [])],
     other: '',
@@ -3009,11 +3102,20 @@ const SettingsPage = ({t,m,ck,lang,setLang,profile,realName,realDistrict,realCro
     const size = (form.farm_size === blankForm().farm_size && parseFloat(p.farm_size) > 0) ? parseFloat(p.farm_size)
       : (isNaN(sizeIn) || sizeIn <= 0 ? NaN : roundHa(toHa(sizeIn, farmUnit(ck))));
     const crops = [...form.crops, ...(form.other.trim() ? [form.other.trim()] : [])];
+    // Only a district of this account's country can be saved
+    const district = form.district.trim();
+    if(district && !districtChoices.includes(district)){
+      setSaving(false);
+      setSaveMsg('\u274c Choose your district from the list - it must be in ' + ck.charAt(0).toUpperCase() + ck.slice(1) + '.');
+      return;
+    }
+    const regionOfDistrict = (Object.entries(PROVINCES[ck] || {}).find(([r, ds]) => ds.includes(district)) || [])[0];
     try {
       await api.put('/api/auth/profile/', {
         full_name: form.full_name.trim(),
         profile: {
-          district: form.district.trim(),
+          district,
+          ...(regionOfDistrict ? {region: regionOfDistrict} : {}),
           farm_size: isNaN(size) || size <= 0 ? null : size,
           main_crops: Array.from(new Set(crops)),
         }
@@ -3022,7 +3124,8 @@ const SettingsPage = ({t,m,ck,lang,setLang,profile,realName,realDistrict,realCro
       setSaveMsg('✅ Saved to your account.');
       setEditing(false);
     } catch(e) {
-      setSaveMsg(e.message === 'No connection.' ? '❌ No connection. Your changes were not saved. Try again when you have signal.' : '❌ Could not save. Please check the details and try again.');
+      setSaveMsg(e.message === 'No connection.' ? '❌ No connection. Your changes were not saved. Try again when you have signal.'
+        : '❌ ' + (e.message && !/^(Update failed|Server error\.?|Request failed)$/.test(e.message) ? e.message : 'Could not save. Please check the details and try again.'));
     }
     setSaving(false);
   };
@@ -3071,8 +3174,12 @@ const SettingsPage = ({t,m,ck,lang,setLang,profile,realName,realDistrict,realCro
                     </div>
                     <div>
                       <label style={labelStyle}>District</label>
-                      <input style={inputStyle} list="agri-districts" value={form.district} onChange={e=>setForm({...form,district:e.target.value})} placeholder="Your district"/>
-                      <datalist id="agri-districts">{districtChoices.map(d=><option key={d} value={d}/>)}</datalist>
+                      <select style={inputStyle} value={districtChoices.includes(form.district) ? form.district : ''} onChange={e=>setForm({...form,district:e.target.value})}>
+                        <option value="">{form.district && !districtChoices.includes(form.district) ? `Choose your district (${form.district} is not in ${ck.charAt(0).toUpperCase()+ck.slice(1)})` : 'Choose your district'}</option>
+                        {Object.entries(PROVINCES[ck] || {}).map(([region, ds]) => (
+                          <optgroup key={region} label={region}>{ds.map(d => <option key={d} value={d}>{d}</option>)}</optgroup>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label style={labelStyle}>Farm size ({farmUnit(ck)==='acre'?'acres':'hectares'})</label>
@@ -3399,7 +3506,14 @@ const ResetPasswordScreen = ({token, onDone}) => {
 const App = () => {
   const {useState, useCallback, useEffect} = React;
   const countryMap = {KE:'kenya',UG:'uganda',TZ:'tanzania',RW:'rwanda',ET:'ethiopia'};
-  const readCachedProfile = () => { try { return JSON.parse(localStorage.getItem('agri_profile')||'null'); } catch(e) { return null; } };
+  // The saved copy of the profile is used only if it belongs to the account signed in now
+  const readCachedProfile = () => {
+    try {
+      const p = JSON.parse(localStorage.getItem('agri_profile')||'null');
+      const now = tokenUid(Auth.getToken());
+      return (p && now && String(p.id) !== now) ? null : p;
+    } catch(e) { return null; }
+  };
   const cacheProfile = (p) => { try { localStorage.setItem('agri_profile', JSON.stringify(p)); } catch(e) {} };
 
   // On a returning visit, show the last known profile straight away (works offline too)
@@ -3409,6 +3523,9 @@ const App = () => {
     const p = readCachedProfile();
     return {country: (p && countryMap[p.country]) || 'rwanda', lang: (p && p.language) || 'en'};
   });
+
+  // Which account this tab is showing (checked before every call to the server)
+  window._agriShownUid = (userProfile && userProfile.id) || null;
 
   // Links from emails: ?reset=... opens the new-password screen, ?verify_email=... confirms the address
   const [resetToken, setResetToken] = useState(() => new URLSearchParams(window.location.search).get('reset'));
