@@ -1202,6 +1202,7 @@ const OtpTimer = ({seconds, onResend}) => {
 const Login = ({onLogin}) => {
   const { useState, useCallback } = React;
   const [authMode, setAuthMode] = useState('phone'); // 'phone' | 'email'
+  const [notice, setNotice] = useState('');
   const [step, setStep] = useState(0);
   // step 0 = sign-in, 1 = otp verify, 2 = otp success, 3 = signup-country, 4 = signup-lang, 5 = signup-details, 6 = farm-profile
   const [isLogin, setIsLogin] = useState(true);
@@ -1289,6 +1290,21 @@ const Login = ({onLogin}) => {
     }
   };
 
+  // Email a reset link (only confirmed emails get one - the server never says which emails exist)
+  const forgotPassword = async () => {
+    setError(''); setNotice('');
+    const e = (form.email || '').trim().toLowerCase();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)){ setError('Type your email address above, then tap "Forgot password?" again.'); return; }
+    setLoading(true);
+    try {
+      await api.post('/api/auth/password-reset/', {email: e});
+      setNotice(`If ${e} is registered and confirmed, we've emailed you a link to choose a new password. It works for 3 hours. No email? Use "Phone number instead" to sign in with a code.`);
+    } catch(err) {
+      setError(err.message || 'Could not send the link. Please try again.');
+    }
+    setLoading(false);
+  };
+
   const handleBack = () => {
     if(step===1){setStep(0);}
     else if(step===3){setIsLogin(true);isSignupRef.current=false;setSignupInProgress(false);window._agriIsSignup=false;setStep(0);}
@@ -1371,6 +1387,7 @@ const Login = ({onLogin}) => {
                   </div>
                 ) : (
                   <form className="lf-form" onSubmit={handleEmailLogin}>
+                    {notice && <div style={{background:'#f0fdf4',border:'1px solid #bbf7d0',color:'#15803d',borderRadius:10,padding:'10px 12px',fontSize:13,marginBottom:4}}>✉️ {notice}</div>}
                     {error && <div className="lf-error"><Ic n="warn" sz={15} s="#dc2626" sw={2}/>{error}</div>}
                     <div className="lf-field">
                       <label className="lf-label">Email address</label>
@@ -1388,7 +1405,7 @@ const Login = ({onLogin}) => {
                     </div>
                     <div className="lf-row">
                       <span/>
-                      <span className="lf-forgot" style={{cursor:'pointer'}} onClick={()=>{setAuthMode('phone');setError('Forgot your password? Sign in with your phone number to get a code, then set a new password in Settings › Email login.');}}>Forgot password?</span>
+                      <span className="lf-forgot" style={{cursor:'pointer'}} onClick={forgotPassword}>Forgot password?</span>
                     </div>
                     <button className="lf-submit" type="submit" disabled={loading}>{loading?'Signing in…':'Sign in →'}</button>
                     <div className="lf-divider">or use phone OTP</div>
@@ -2604,9 +2621,11 @@ const EmailLoginPanel = ({profile}) => {
     if(pw !== pw2) return setMsg({ok:false, text:'The two passwords do not match.'});
     setBusy(true);
     try {
-      await api.post('/api/auth/email-password/', {email: e, password: pw}, true);
+      const r = await api.post('/api/auth/email-password/', {email: e, password: pw}, true);
       setPw(''); setPw2('');
-      setMsg({ok:true, text:`Done. You can now sign in with ${e} and this password, or with your phone number as before.`});
+      setMsg({ok:true, text: r.verification_sent
+        ? `Done. You can now sign in with ${e} and this password. We've emailed you a link to confirm the address.`
+        : `Done. You can now sign in with ${e} and this password, or with your phone number as before.`});
       window.dispatchEvent(new Event('agri-profile-refresh'));
     } catch(err) {
       setMsg({ok:false, text: err.message || 'Could not save. Please try again.'});
@@ -2624,6 +2643,16 @@ const EmailLoginPanel = ({profile}) => {
           ? <>Email login is <strong>on</strong> for <strong>{current}</strong>. You can also still sign in with a code sent to your phone.</>
           : <>Add an email and password to sign in without waiting for an SMS code. Your phone number keeps working too.</>}
       </div>
+      {profile && profile.email && (profile.email_verified
+        ? <div style={{fontSize:13,color:'#15803d',marginBottom:14}}>✓ {profile.email} is confirmed. You can reset your password by email.</div>
+        : <div style={{fontSize:13,color:'#92400e',background:'#fffbeb',border:'1px solid #fde68a',borderRadius:8,padding:'8px 12px',marginBottom:14}}>
+            {profile.email} is not confirmed yet. Open the link we emailed you.{' '}
+            <span style={{textDecoration:'underline',cursor:'pointer',fontWeight:600}} onClick={async()=>{
+              setMsg(null);
+              try { const r = await api.post('/api/auth/email-verify/resend/', {}, true); setMsg({ok:true, text: r.sent ? `We sent a new confirmation link to ${profile.email}.` : (r.detail || 'Already confirmed.')}); }
+              catch(err) { setMsg({ok:false, text: err.message || 'Could not send the email. Please try again later.'}); }
+            }}>Send the link again</span>
+          </div>)}
       {msg && <div style={{fontSize:12,padding:'8px 12px',borderRadius:8,marginBottom:12,background:msg.ok?'#f0fdf4':'#fef2f2',color:msg.ok?'#15803d':'#b91c1c'}}>{msg.ok?'✅ ':'❌ '}{msg.text}</div>}
       <div style={{display:'flex',flexDirection:'column',gap:12}}>
         <div>
@@ -2642,7 +2671,7 @@ const EmailLoginPanel = ({profile}) => {
         <button onClick={save} disabled={busy} style={{background:'#15803d',color:'#fff',border:'none',borderRadius:8,padding:'11px',fontSize:14,fontWeight:600,cursor:'pointer'}}>
           {busy ? 'Saving…' : isOn ? 'Change email or password' : 'Turn on email login'}
         </button>
-        <div style={{fontSize:12,color:'#6b7280'}}>Forgot your password? Sign in with your phone number, then set a new one here.</div>
+        <div style={{fontSize:12,color:'#6b7280'}}>Forgot your password? Tap “Forgot password?” on the sign-in screen (your email must be confirmed), or sign in with your phone number and set a new one here.</div>
       </div>
     </div>
   );
@@ -2763,7 +2792,7 @@ const SettingsPage = ({t,m,ck,lang,setLang,profile,realName,realDistrict,realCro
                   {[
                     ['Full name', realName || 'Not set'],
                     ['Phone', (profile && profile.phone) || ''],
-                    ['Email', (profile && profile.email) || 'Not set'],
+                    ['Email', profile && profile.email ? profile.email + (profile.email_verified ? ' ✓ confirmed' : ' (not confirmed)') : 'Not set'],
                     ['Country', ck.charAt(0).toUpperCase()+ck.slice(1)],
                     ['District', realDistrict || 'Not set'],
                     ['Farm size', fmtFarmSize(p.farm_size) || 'Not set'],
@@ -3001,6 +3030,61 @@ const WebApp = ({countryKey, langKey, onLogout, userProfile}) => {
 };
 
 /* ══ ROOT APP ══ */
+/* ══ RESET PASSWORD (opened from the email link) ══ */
+const ResetPasswordScreen = ({token, onDone}) => {
+  const [pw, setPw] = useState('');
+  const [pw2, setPw2] = useState('');
+  const [show, setShow] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState(null);
+  const [done, setDone] = useState(false);
+  const submit = async (ev) => {
+    ev.preventDefault();
+    setMsg(null);
+    if(pw.length < 8) return setMsg('Use a password of at least 8 characters.');
+    if(/^\d+$/.test(pw)) return setMsg('Use letters as well as numbers in your password.');
+    if(pw !== pw2) return setMsg('The two passwords do not match.');
+    setBusy(true);
+    try {
+      await api.post('/api/auth/password-reset/confirm/', {token, password: pw});
+      setDone(true);
+    } catch(e) {
+      setMsg(e.message || 'Could not change the password. Please try again.');
+    }
+    setBusy(false);
+  };
+  const box = {maxWidth:420,margin:'60px auto',background:'#fff',border:'1px solid #e5e7eb',borderRadius:16,padding:'28px 24px',boxShadow:'0 10px 30px rgba(0,0,0,.06)'};
+  const input = {width:'100%',padding:'11px 12px',border:'1.5px solid #e5e7eb',borderRadius:8,fontSize:15,outline:'none',marginTop:4};
+  return (
+    <div style={{minHeight:'100vh',background:'#f0fdf4',padding:'0 16px'}}>
+      <div style={box}>
+        <div style={{fontSize:20,fontWeight:700,color:'#15803d',marginBottom:6}}>🌱 AgriAdvisor</div>
+        {done ? (
+          <>
+            <div style={{fontSize:17,fontWeight:700,margin:'12px 0 8px'}}>✅ Password changed</div>
+            <div style={{fontSize:14,color:'#374151',marginBottom:18}}>You can now sign in with your email and new password, or with your phone number.</div>
+            <button onClick={onDone} style={{width:'100%',background:'#15803d',color:'#fff',border:'none',borderRadius:10,padding:'12px',fontSize:15,fontWeight:700,cursor:'pointer'}}>Go to sign in</button>
+          </>
+        ) : (
+          <form onSubmit={submit}>
+            <div style={{fontSize:17,fontWeight:700,margin:'12px 0 6px'}}>Choose a new password</div>
+            <div style={{fontSize:13,color:'#6b7280',marginBottom:14}}>At least 8 characters, with letters as well as numbers.</div>
+            {msg && <div style={{fontSize:13,padding:'8px 12px',borderRadius:8,marginBottom:12,background:'#fef2f2',color:'#b91c1c'}}>❌ {msg}</div>}
+            <label style={{fontSize:12,fontWeight:600,color:'#374151'}}>New password</label>
+            <input style={input} type={show?'text':'password'} autoComplete="new-password" value={pw} onChange={e=>setPw(e.target.value)}/>
+            <div style={{height:10}}/>
+            <label style={{fontSize:12,fontWeight:600,color:'#374151'}}>Type it again</label>
+            <input style={input} type={show?'text':'password'} autoComplete="new-password" value={pw2} onChange={e=>setPw2(e.target.value)}/>
+            <label style={{fontSize:12,color:'#6b7280',display:'flex',gap:6,alignItems:'center',margin:'10px 0 16px'}}><input type="checkbox" checked={show} onChange={e=>setShow(e.target.checked)}/> Show password</label>
+            <button type="submit" disabled={busy} style={{width:'100%',background:'#15803d',color:'#fff',border:'none',borderRadius:10,padding:'12px',fontSize:15,fontWeight:700,cursor:'pointer'}}>{busy?'Saving…':'Save new password'}</button>
+            <div style={{textAlign:'center',marginTop:14}}><span onClick={onDone} style={{fontSize:13,color:'#6b7280',cursor:'pointer',textDecoration:'underline'}}>Cancel</span></div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const App = () => {
   const {useState, useCallback, useEffect} = React;
   const countryMap = {KE:'kenya',UG:'uganda',TZ:'tanzania',RW:'rwanda',ET:'ethiopia'};
@@ -3014,6 +3098,19 @@ const App = () => {
     const p = readCachedProfile();
     return {country: (p && countryMap[p.country]) || 'rwanda', lang: (p && p.language) || 'en'};
   });
+
+  // Links from emails: ?reset=... opens the new-password screen, ?verify_email=... confirms the address
+  const [resetToken, setResetToken] = useState(() => new URLSearchParams(window.location.search).get('reset'));
+  const [banner, setBanner] = useState(null);
+  const clearLinkFromUrl = () => { try { window.history.replaceState(null, '', window.location.pathname); } catch(e) {} };
+  useEffect(()=>{
+    const verify = new URLSearchParams(window.location.search).get('verify_email');
+    if(!verify) return;
+    clearLinkFromUrl();
+    api.post('/api/auth/email-verify/', {token: verify})
+      .then(()=>{ setBanner({ok:true, text:'✅ Your email is confirmed.'}); window.dispatchEvent(new Event('agri-profile-refresh')); })
+      .catch(e=>setBanner({ok:false, text: e.message === 'No connection. Check your internet.' ? 'No connection. Open the link again when you have signal.' : 'This confirmation link has expired or was already used. Send a new one from Settings › Email login.'}));
+  },[]);
 
   const handleLogin = useCallback((country,lang)=>{
     const userData = window._agriUserData || null;
@@ -3063,8 +3160,12 @@ const App = () => {
     };
   },[handleLogout, loadProfile]);
 
-  if(!session) return <Login onLogin={handleLogin}/>;
-  return <WebApp countryKey={session.country} langKey={session.lang} onLogout={handleLogout} userProfile={userProfile}/>;
+  const bannerEl = banner && (
+    <div onClick={()=>setBanner(null)} style={{position:'fixed',top:14,left:'50%',transform:'translateX(-50%)',zIndex:9999,maxWidth:'92vw',background:banner.ok?'#f0fdf4':'#fef2f2',color:banner.ok?'#15803d':'#b91c1c',border:`1px solid ${banner.ok?'#bbf7d0':'#fecaca'}`,borderRadius:10,padding:'10px 16px',fontSize:14,fontWeight:600,boxShadow:'0 6px 20px rgba(0,0,0,.12)',cursor:'pointer'}}>{banner.text}</div>
+  );
+  if(resetToken) return <>{bannerEl}<ResetPasswordScreen token={resetToken} onDone={()=>{ clearLinkFromUrl(); setResetToken(null); }}/></>;
+  if(!session) return <>{bannerEl}<Login onLogin={handleLogin}/></>;
+  return <>{bannerEl}<WebApp countryKey={session.country} langKey={session.lang} onLogout={handleLogout} userProfile={userProfile}/></>;
 };
 
 // Global tab setter for native mobile taps
