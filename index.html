@@ -17,7 +17,20 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"/>
 <meta name="version" content="2.1.0"/>
 <!-- AgriAdvisor v6.0.0 - Improved Farm Profile -->
-<title>AgriAdvisor — Smart Farming for East Africa</title>
+<title>AgriAdvisor – Free Farming App for East Africa</title>
+<meta name="description" content="Free farming app for Rwanda, Kenya, Uganda, Tanzania and Ethiopia. Photograph a sick plant to find the disease, check market prices, weather and planting dates."/>
+<link rel="canonical" href="https://agriadvisor.co/"/>
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="AgriAdvisor"/>
+<meta property="og:title" content="AgriAdvisor – Free Farming App for East Africa"/>
+<meta property="og:description" content="Free farming app for Rwanda, Kenya, Uganda, Tanzania and Ethiopia. Photograph a sick plant to find the disease, check market prices, weather and planting dates."/>
+<meta property="og:url" content="https://agriadvisor.co/"/>
+<meta property="og:image" content="https://agriadvisor.co/og-image.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:image:alt" content="AgriAdvisor - free farming app for East Africa"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://agriadvisor.co/#website", "url": "https://agriadvisor.co/", "name": "AgriAdvisor", "alternateName": "AgriAdvisor East Africa", "inLanguage": "en", "publisher": {"@id": "https://agriadvisor.co/#org"}}, {"@type": "Organization", "@id": "https://agriadvisor.co/#org", "name": "AgriAdvisor", "url": "https://agriadvisor.co/", "logo": "https://agriadvisor.co/logo-512.png"}, {"@type": "WebApplication", "@id": "https://agriadvisor.co/#app", "name": "AgriAdvisor", "url": "https://agriadvisor.co/", "description": "Free farming app for Rwanda, Kenya, Uganda, Tanzania and Ethiopia. Photograph a sick plant to find the disease, check market prices, weather and planting dates.", "applicationCategory": "BusinessApplication", "operatingSystem": "Android, iOS, any web browser", "browserRequirements": "Requires JavaScript", "image": "https://agriadvisor.co/og-image.jpg", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD", "description": "Free plan"}, "availableLanguage": ["English", "Kinyarwanda", "Swahili", "Luganda", "Amharic"], "areaServed": [{"@type": "Country", "name": "Rwanda"}, {"@type": "Country", "name": "Kenya"}, {"@type": "Country", "name": "Uganda"}, {"@type": "Country", "name": "Tanzania"}, {"@type": "Country", "name": "Ethiopia"}], "publisher": {"@id": "https://agriadvisor.co/#org"}}]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;1,300;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
@@ -608,10 +621,71 @@ a{color:inherit;text-decoration:none}
 @media(max-width:350px){
   .nav-logo-name{display:none}
 }
+
+/* ── ABOUT AGRIADVISOR (public text under the sign-in screen; hidden once signed in) ── */
+.ab{background:#fff;border-top:1px solid rgba(0,0,0,.07);padding:56px 0 40px;font-family:var(--font-body);color:var(--ink)}
+body.agri-signed-in .ab{display:none}
+.ab-wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+.ab-eyebrow{font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--green)}
+.ab-h1{font-family:var(--font-display);font-weight:500;font-size:clamp(32px,6vw,48px);line-height:1.12;letter-spacing:-.01em;margin:10px 0 14px;max-width:16ch}
+.ab-h1 em{color:var(--green);font-style:italic}
+.ab-lead{font-size:17px;color:#4b5563;max-width:62ch;line-height:1.65}
+.ab-h2{font-family:var(--font-display);font-weight:500;font-size:clamp(24px,4vw,30px);margin:44px 0 16px}
+.ab-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:30px}
+.ab-card{border:1px solid #e5ece8;border-radius:16px;padding:20px;background:#fbfdfc}
+.ab-ic{width:42px;height:42px;border-radius:12px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.ab-card h3{font-family:var(--font-display);font-weight:500;font-size:19px;margin-bottom:4px}
+.ab-card p{font-size:14.5px;color:#4b5563;line-height:1.55}
+.ab-countries{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;list-style:none}
+.ab-countries a{display:flex;gap:10px;align-items:center;border:1px solid #e5ece8;border-radius:14px;padding:12px 14px;background:#fff;transition:border-color .15s}
+.ab-countries a:hover{border-color:#a7f3d0}
+.ab-countries .f{font-size:24px}
+.ab-countries strong{display:block;font-size:15px}
+.ab-countries small{display:block;font-size:12.5px;color:#6b7280}
+.ab details{border:1px solid #e5ece8;border-radius:14px;padding:14px 16px;margin-bottom:10px;max-width:760px;background:#fff}
+.ab summary{cursor:pointer;font-weight:600;font-size:15.5px;list-style:none;display:flex;justify-content:space-between;gap:12px}
+.ab summary::-webkit-details-marker{display:none}
+.ab summary::after{content:'+';color:var(--green);font-size:20px;line-height:1}
+.ab details[open] summary::after{content:'\2013'}
+.ab details p{margin-top:8px;color:#4b5563;font-size:14.5px;line-height:1.6}
+.ab-foot{margin-top:36px;padding-top:18px;border-top:1px solid #eef2f0;font-size:13px;color:#6b7280;display:flex;flex-wrap:wrap;gap:8px 18px;justify-content:space-between}
+.ab-foot a{text-decoration:underline}
+@media(max-width:600px){.ab{padding:40px 0 32px}}
 </style>
 </head>
 <body>
 <div id="root"><div style="min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#f0fdf4;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif"><div style="width:60px;height:60px;border-radius:18px;background:#15803d;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M12 22V12M12 12C12 7 7 4 2 4c0 5 3 9 10 8M12 12c0-5 5-8 10-8 0 5-3 9-10 8"/></svg></div><div style="font-size:20px;font-weight:700;color:#15803d">AgriAdvisor</div><div style="font-size:14px;color:#6b7280">Loading…</div></div></div>
+<!-- About AgriAdvisor: public text for visitors and search engines (hidden once signed in) -->
+<section id="about" class="ab" aria-labelledby="ab-title">
+ <div class="ab-wrap">
+  <p class="ab-eyebrow">About AgriAdvisor</p>
+  <h1 id="ab-title" class="ab-h1">Free farming app for <em>East Africa</em></h1>
+  <p class="ab-lead">AgriAdvisor helps smallholder farmers in Rwanda, Kenya, Uganda, Tanzania and Ethiopia find crop diseases early, sell at the right price and plant at the right time. It works on any smartphone, in English, Kinyarwanda, Kiswahili, Luganda and Amharic.</p>
+  <div class="ab-grid">
+    <div class="ab-card"><div class="ab-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h3l2-3h8l2 3h3v11H3z"/><circle cx="12" cy="13" r="4"/></svg></div><h3>Crop Doctor</h3><p>Take a photo of a sick leaf to find out what the disease or pest may be, and what to do next.</p></div>
+    <div class="ab-card"><div class="ab-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18"/><path d="M6 16l4-5 3 3 5-7"/><path d="M15 7h3v3"/></svg></div><h3>Market prices</h3><p>Check crop prices at the main markets before you sell, starting with Kimironko, Nyabugogo and Musanze.</p></div>
+    <div class="ab-card"><div class="ab-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 15h10a4 4 0 0 0 0-8 6 6 0 0 0-11.5 1.5A3.5 3.5 0 0 0 7 15z"/><path d="M8 18l-1 2M12 18l-1 2M16 18l-1 2"/></svg></div><h3>Weather for your farm</h3><p>The forecast for your own district, so you know when rain is coming.</p></div>
+    <div class="ab-card"><div class="ab-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></div><h3>Planting calendar</h3><p>When to plant and harvest your crops in each season.</p></div>
+    <div class="ab-card"><div class="ab-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h9M8.5 3v2M6 5c0 4 3 7 6 8M11 5c-1 4-4 7-7 8"/><path d="M13 21l4-9 4 9M14.5 18h5"/></svg></div><h3>In your language</h3><p>English, Kinyarwanda, Kiswahili, Luganda or Amharic.</p></div>
+    <div class="ab-card"><div class="ab-ic"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17L17 3l4 4L7 21z"/><path d="M7 13l2 2M10 10l2 2M13 7l2 2"/></svg></div><h3>Your units</h3><p>Farm size in acres in Kenya, Uganda and Tanzania, and in hectares in Rwanda and Ethiopia.</p></div>
+  </div>
+  <h2 class="ab-h2">Choose your country</h2>
+  <ul class="ab-countries">
+    <li><a href="/rwanda/"><span class="f" aria-hidden="true">🇷🇼</span><span><strong>Rwanda</strong><small>Kinyarwanda &middot; English</small></span></a></li>
+    <li><a href="/kenya/"><span class="f" aria-hidden="true">🇰🇪</span><span><strong>Kenya</strong><small>Kiswahili &middot; English</small></span></a></li>
+    <li><a href="/uganda/"><span class="f" aria-hidden="true">🇺🇬</span><span><strong>Uganda</strong><small>Luganda &middot; English</small></span></a></li>
+    <li><a href="/tanzania/"><span class="f" aria-hidden="true">🇹🇿</span><span><strong>Tanzania</strong><small>Kiswahili &middot; English</small></span></a></li>
+    <li><a href="/ethiopia/"><span class="f" aria-hidden="true">🇪🇹</span><span><strong>Ethiopia</strong><small>Amharic &middot; English</small></span></a></li>
+  </ul>
+  <h2 class="ab-h2">Questions</h2>
+  <details><summary>Is AgriAdvisor free?</summary><p>Yes. Creating an account is free, and the free plan includes 3 Crop Doctor scans every month. Paid plans give you more scans when you need them.</p></details>
+  <details><summary>How do I sign up?</summary><p>Tap “Create one free” at the top of this page. Sign up with your email address – or, in Rwanda, with your phone number and an SMS code.</p></details>
+  <details><summary>Which crops does it cover?</summary><p>Maize, beans, potatoes, cassava, bananas and matooke, coffee, tea, rice, wheat, sorghum, teff, cashew and many more – the list changes with your country.</p></details>
+  <details><summary>Do I need to download anything?</summary><p>No. AgriAdvisor works in the browser of any Android phone or iPhone. Add it to your home screen so it opens like an app.</p></details>
+  <div class="ab-foot"><span>&copy; 2026 AgriAdvisor &middot; Smart farming for East Africa</span><span><a href="/privacy.html">Privacy policy</a></span></div>
+ </div>
+</section>
+
 <script type="text/babel">
 const { useState, useCallback, useEffect } = React;
 
@@ -1274,6 +1348,24 @@ const Login = ({onLogin}) => {
   const [lang, setLang] = useState(null);
   const [dial, setDial] = useState('+250');
   const [form, setForm] = useState({email:'', password:'', name:'', phone:''});
+  // Links from the country pages (/?start=signup&country=kenya) open "Create account" with that country picked.
+  // SMS sign-up is for Rwanda; the other countries start on email (the Phone tab is still there).
+  React.useEffect(() => {
+    let q;
+    try { q = new URLSearchParams(window.location.search); } catch(e) { return; }
+    if (q.get('start') !== 'signup') return;
+    const c = (q.get('country') || '').toLowerCase();
+    setIsLogin(false); isSignupRef.current = true; setSignupInProgress(true); window._agriIsSignup = true;
+    if (LANGS[c]) {
+      setCountry(c);
+      setDial({rwanda:'+250', kenya:'+254', uganda:'+256', tanzania:'+255', ethiopia:'+251'}[c] || '+250');
+      setSignupMode(c === 'rwanda' ? 'phone' : 'email');
+      setStep(4);
+    } else {
+      setStep(3);
+    }
+    try { window.history.replaceState(null, '', window.location.pathname); } catch(e) {}
+  }, []);
   const countryKeys = ['kenya','uganda','tanzania','rwanda','ethiopia'];
   React.useEffect(()=>{
     const onConfirmed = (ev) => {
@@ -1435,7 +1527,7 @@ const Login = ({onLogin}) => {
         </div>
         <div className="brand-bottom">
           <div className="brand-stats">
-            {[['50K+','Farmers'],['5','Countries'],['94%','Accuracy']].map(([v,l])=>(
+            {[['5','Countries'],['5','Languages'],['Free','To start']].map(([v,l])=>(
               <div key={l} className="bstat"><div className="bstat-val">{v}</div><div className="bstat-lbl">{l}</div></div>
             ))}
           </div>
@@ -3374,6 +3466,10 @@ const App = () => {
     };
   },[handleLogout, loadProfile]);
 
+  // The public "About AgriAdvisor" text under the sign-in screen is only for visitors
+  React.useEffect(() => {
+    document.body.classList.toggle('agri-signed-in', !!session);
+  }, [session]);
   const bannerEl = banner && (
     <div onClick={()=>setBanner(null)} style={{position:'fixed',top:14,left:'50%',transform:'translateX(-50%)',zIndex:9999,maxWidth:'92vw',background:banner.ok?'#f0fdf4':'#fef2f2',color:banner.ok?'#15803d':'#b91c1c',border:`1px solid ${banner.ok?'#bbf7d0':'#fecaca'}`,borderRadius:10,padding:'10px 16px',fontSize:14,fontWeight:600,boxShadow:'0 6px 20px rgba(0,0,0,.12)',cursor:'pointer'}}>{banner.text}</div>
   );
