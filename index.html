@@ -30,7 +30,7 @@
 <meta property="og:image:height" content="630"/>
 <meta property="og:image:alt" content="AgriAdvisor - free farming app for East Africa"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://agriadvisor.co/#website", "url": "https://agriadvisor.co/", "name": "AgriAdvisor", "alternateName": "AgriAdvisor East Africa", "inLanguage": "en", "publisher": {"@id": "https://agriadvisor.co/#org"}}, {"@type": "Organization", "@id": "https://agriadvisor.co/#org", "name": "AgriAdvisor", "url": "https://agriadvisor.co/", "logo": "https://agriadvisor.co/logo-512.png"}, {"@type": "WebApplication", "@id": "https://agriadvisor.co/#app", "name": "AgriAdvisor", "url": "https://agriadvisor.co/", "description": "Free farming app for Rwanda, Kenya, Uganda, Tanzania and Ethiopia. Photograph a sick plant to find the disease, check market prices, weather and planting dates.", "applicationCategory": "BusinessApplication", "operatingSystem": "Android, iOS, any web browser", "browserRequirements": "Requires JavaScript", "image": "https://agriadvisor.co/og-image.jpg", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD", "description": "Free plan"}, "availableLanguage": ["English", "Kinyarwanda", "Swahili", "Luganda", "Amharic"], "areaServed": [{"@type": "Country", "name": "Rwanda"}, {"@type": "Country", "name": "Kenya"}, {"@type": "Country", "name": "Uganda"}, {"@type": "Country", "name": "Tanzania"}, {"@type": "Country", "name": "Ethiopia"}], "publisher": {"@id": "https://agriadvisor.co/#org"}}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://agriadvisor.co/#website", "url": "https://agriadvisor.co/", "name": "AgriAdvisor", "alternateName": "AgriAdvisor East Africa", "inLanguage": "en", "publisher": {"@id": "https://agriadvisor.co/#org"}}, {"@type": "Organization", "@id": "https://agriadvisor.co/#org", "name": "AgriAdvisor", "url": "https://agriadvisor.co/", "logo": "https://agriadvisor.co/logo-512.png", "email": "hello@agriadvisor.co", "contactPoint": {"@type": "ContactPoint", "contactType": "customer support", "email": "hello@agriadvisor.co", "areaServed": ["RW", "KE", "UG", "TZ", "ET"], "availableLanguage": ["English", "Kinyarwanda", "Swahili"]}}, {"@type": "WebApplication", "@id": "https://agriadvisor.co/#app", "name": "AgriAdvisor", "url": "https://agriadvisor.co/", "description": "Free farming app for Rwanda, Kenya, Uganda, Tanzania and Ethiopia. Photograph a sick plant to find the disease, check market prices, weather and planting dates.", "applicationCategory": "BusinessApplication", "operatingSystem": "Android, iOS, any web browser", "browserRequirements": "Requires JavaScript", "image": "https://agriadvisor.co/og-image.jpg", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD", "description": "Free plan"}, "availableLanguage": ["English", "Kinyarwanda", "Swahili", "Luganda", "Amharic"], "areaServed": [{"@type": "Country", "name": "Rwanda"}, {"@type": "Country", "name": "Kenya"}, {"@type": "Country", "name": "Uganda"}, {"@type": "Country", "name": "Tanzania"}, {"@type": "Country", "name": "Ethiopia"}], "publisher": {"@id": "https://agriadvisor.co/#org"}}]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;1,300;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
@@ -682,7 +682,8 @@ body.agri-signed-in .ab{display:none}
   <details><summary>How do I sign up?</summary><p>Tap “Create one free” at the top of this page. Sign up with your email address – or, in Rwanda, with your phone number and an SMS code.</p></details>
   <details><summary>Which crops does it cover?</summary><p>Maize, beans, potatoes, cassava, bananas and matooke, coffee, tea, rice, wheat, sorghum, teff, cashew and many more – the list changes with your country.</p></details>
   <details><summary>Do I need to download anything?</summary><p>No. AgriAdvisor works in the browser of any Android phone or iPhone. Add it to your home screen so it opens like an app.</p></details>
-  <div class="ab-foot"><span>&copy; 2026 AgriAdvisor &middot; Smart farming for East Africa</span><span><a href="/privacy.html">Privacy policy</a></span></div>
+  <details><summary>How can I contact AgriAdvisor?</summary><p>Email <a href="mailto:hello@agriadvisor.co">hello@agriadvisor.co</a> – for questions, partnerships or anything else.</p></details>
+  <div class="ab-foot"><span>&copy; 2026 AgriAdvisor &middot; Smart farming for East Africa</span><span><a href="mailto:hello@agriadvisor.co">hello@agriadvisor.co</a> &middot; <a href="/privacy.html">Privacy policy</a></span></div>
  </div>
 </section>
 
@@ -3170,6 +3171,10 @@ const SettingsPage = ({t,m,ck,lang,setLang,profile,realName,realDistrict,realCro
             </div>
           )}
         </div>
+      </div>
+      {/* Help: one address for questions and partnerships */}
+      <div style={{marginTop:28,background:'#f0fdf4',border:'1px solid #bbf7d0',borderRadius:12,padding:'14px 16px',fontSize:14,color:'#14532d',lineHeight:1.55}}>
+        <strong>Need help?</strong> Email us at <a href="mailto:hello@agriadvisor.co" style={{color:'#15803d',fontWeight:700,textDecoration:'underline'}}>hello@agriadvisor.co</a> – questions, ideas or partnerships.
       </div>
       {/* Logout button — always visible, important on mobile where top-nav is hidden */}
       <div style={{marginTop:28,paddingBottom:8}}>
